@@ -5,7 +5,7 @@ import { Image, Label } from "../src/display";
 import { Button, ImageButton } from "../src/form";
 import { FlowBox } from "../src/list";
 
-export function initFlowBoxDemo(app: App): Window {
+export function createFlowBoxDemo(app: App): void {
     const window = new Window("FlowBox example");
     const flowbox = new FlowBox();
 
@@ -20,14 +20,14 @@ export function initFlowBoxDemo(app: App): Window {
     const actionBar = new ActionBar();
     actionBar.addChild(new Label(`This flowbox contains 1000 elements`));
     const closeButton = new Button("Close");
-    closeButton.connect(Signal.Clicked, () => app.closeCurrent())
+    closeButton.connect(Signal.Clicked, () => app.disposeCurrent())
     actionBar.addChild(closeButton)
 
     window.addChild(actionBar);
     window.addChild(flowbox);
     app.addChild(window);
 
-    return window;
+    app.open(window);
 }
 
 interface Color {

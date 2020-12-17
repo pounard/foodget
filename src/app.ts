@@ -60,7 +60,7 @@ export class Window extends Page {
 
         const labelElement = this.doCreateElement("div", "fg-window-label");
         const labelTextElement = this.doCreateElement("h1");
-        labelTextElement.innerText = this.getLabel() || '';
+        labelTextElement.innerText = this.getLabel() ?? '';
         labelElement.appendChild(labelTextElement);
         element.appendChild(labelElement);
 
@@ -100,7 +100,7 @@ export class App extends AbstractContainer<Window> {
     /**
      * Currently displayed page (per default the first one).
      */
-    private displayedWindowId: string | null = null;
+    private currentId: string | null = null;
 
     /**
      * HTML Element from the outside where this App is being attached to.
@@ -119,25 +119,31 @@ export class App extends AbstractContainer<Window> {
         return this.history[this.history.length - 1];
     }
 
-    /**
-     * Open window and hide others.
-     */
-    open(id: string): void {
-        const position = this.findChildPosition(id);
-        let toBeShown: ContainerCell<Window> | null = null;
+    protected doOpen(target: ContainerCell<Window>): void {
         for (const child of this.getChildren()) {
-            if (child.position === position) {
-                toBeShown = child;
-            } else {
+            if (child !== target) {
                 child.item.hide();
             }
         }
-        if (toBeShown) {
-            this.displayedWindowId = toBeShown.item.getId();
-            toBeShown.item.show();
-            if (this.getLastHistoryItem() !== toBeShown.item) {
-                this.history.push(toBeShown.item);
+        if (target) {
+            this.currentId = target.item.getId();
+            target.item.show();
+            if (this.getLastHistoryItem() !== target.item) {
+                this.history.push(target.item);
             }
+        }
+    }
+
+    /**
+     * Open window and hide others.
+     */
+    open(window: string | number | Window): void {
+        const target = this.findChild(window);
+        if (target) {
+            if (this.hasChanged()) {
+                this.repaint();
+            }
+            this.doOpen(target);
         }
     }
 
@@ -157,14 +163,26 @@ export class App extends AbstractContainer<Window> {
     }
 
     /**
+     * Close and dispose current window.
+     */
+    disposeCurrent() {
+        if (2 > this.history.length) {
+            throw "Cannot close last window";
+        }
+        const current = this.history.pop() as Window;
+        const previous = this.getLastHistoryItem();
+        this.removeChild(current);
+        if (previous) {
+            this.open(previous.getId());
+        }
+    }
+
+    /**
      * Create new window.
      */
     createWindow(label?: string): Window {
-        const window = new Window();
+        const window = new Window(label);
         this.addChild(window);
-        if (label) {
-            window.setLabel(label);
-        }
         window.hide();
         return window;
     }
@@ -174,16 +192,18 @@ export class App extends AbstractContainer<Window> {
      */
     createElement() {
         const element = this.createContainer("fg-app", "section");
+        let first = null;
         for (const child of this.getChildren()) {
-            if (!this.displayedWindowId) {
-                this.displayedWindowId = child.item.getId();
-            }
             element.appendChild(child.item.getElement());
+            // Per default, always open the first, but if a selection was
+            // already recorded, restore this one instead, and avoir user
+            // confusion on repaint.
+            if (!first || child.item.getId() === this.currentId) {
+                first = child;
+            }
         }
-        if (this.displayedWindowId) {
-            this.open(this.displayedWindowId);
-        } else {
-            throw "Cannot start application without windows to open.";
+        if (first) {
+            this.doOpen(first);
         }
         return element;
     }
@@ -199,6 +219,6 @@ export class App extends AbstractContainer<Window> {
             throw "App must be instanciated calling start() method.";
         }
         this.origin.innerHTML = "";
-        this.origin.appendChild(this.createElement());
+        this.origin.appendChild(this.getElement());
     }
 }

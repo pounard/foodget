@@ -49,13 +49,17 @@ export enum CellSizing {
     Shrink,
 }
 
+export interface ContainerCellDisplay {
+    alignment: CellAlignment,
+    sizing: CellSizing,
+}
+
 /**
  * Because we need a bit more than just a Widget here.
  */
-export interface ContainerCell<T extends Widget> {
+export interface ContainerCell<T extends Widget> extends ContainerCellDisplay {
     item: T,
     position: number,
-    sizing: CellSizing,
 }
 
 export type Classes = null | string | string[];
@@ -177,35 +181,17 @@ export interface Container<T extends Widget> extends Widget {
     /**
      * Add child.
      */
-    addChild(child: T, sizing?: CellSizing, position?: number): void;
+    addChild(child: T, sizing?: CellSizing, alignment?: CellAlignment, position?: number): void;
 
     /**
      * Remove child.
-     *
-     * @todo
-     *   Reimplement later once we will have child reindexing right.
      */
-    // removeChild(child: T): void;
-
-    /**
-     * Find child position with id.     
-     */
-    findChildPosition(id: string): number | null;
-
-    /**
-     * Find child with id.     
-     */
-    findChildWithId(id: string): ContainerCell<T> | null;
-
-    /**
-     * Find child at position.
-     */
-    findChildAtPosition(position: number): ContainerCell<T> | null;
+    removeChild(child: string | number | T): void;
 
     /**
      * Find child matching id (if string) or at position (if number).
      */
-    findChild(offset: string | number): ContainerCell<T> | null;
+    findChild(offset: string | number | T): ContainerCell<T> | null;
 
     /**
      * Get children.
@@ -339,7 +325,6 @@ export abstract class AbstractWidget implements Widget {
     protected doShow() {
         if (this.element) {
             this.element.style.display = this.elementDisplayValue;
-            this.element.style.visibility = "visible";
         }
     }
 
@@ -349,7 +334,6 @@ export abstract class AbstractWidget implements Widget {
     protected doHide() {
         if (this.element) {
             this.element.style.display = "none";
-            this.element.style.visibility = "hidden";
         }
     }
 
@@ -382,7 +366,7 @@ export abstract class AbstractWidget implements Widget {
      */
     getId(): string {
         if (!this.id) {
-            this.id = 'fg-el-' + ID_COUNT++;
+            this.id = 'fg-' + ID_COUNT++;
         }
         return this.id;
     }
@@ -483,10 +467,10 @@ export abstract class AbstractWidget implements Widget {
      * @inheritdoc
      */
     getElement() {
-        if (!this.element) {
+        if (!this.element || this.changed) {
             this.element = this.createElement();
             this.elementDisplayValue = this.element.style.display;
-            this.element.classList.add("fg-widget");
+            this.changed = false;
         }
 
         if (this.displayed) {
@@ -509,7 +493,6 @@ export abstract class AbstractWidget implements Widget {
             if (previousElement) {
                 previousElement.replaceWith(this.element);
             }
-            this.changed = false;
         }
     }
 }
@@ -543,6 +526,28 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
         this.configure();
     }
 
+    protected doApplyAlignment(element: HTMLElement, display: ContainerCellDisplay): void {
+        switch (display.sizing) {
+            case CellSizing.Expand:
+                element.classList.add('fg-w-e');
+                break;
+            case CellSizing.Shrink:
+                element.classList.add('fg-w-s');
+                break;
+        }
+        switch (display.alignment) {
+            case CellAlignment.Left:
+                element.classList.add('fg-w-l');
+                break;
+            case CellAlignment.Center:
+                element.classList.add('fg-w-c');
+                break;
+            case CellAlignment.Right:
+                element.classList.add('fg-w-r');
+                break;
+        }
+    }
+
     /**
      * Use this instead of document.createElement().
      */
@@ -564,12 +569,14 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
         if (tagName) {
             const element = document.createElement(tagName);
             this.doApplyClasses(element, className);
+            this.doApplyAlignment(element, child);
             element.setAttribute("id", child.item.getId());
             element.appendChild(child.item.getElement());
             return element;
         }
         const element = child.item.getElement();
         this.doApplyClasses(element, className);
+        this.doApplyAlignment(element, child);
         element.setAttribute("id", child.item.getId());
         return element;
     }
@@ -620,15 +627,17 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
     protected createAlignedCell(child: ContainerCell<T>, className?: Classes, tagName: string | null = "div"): HTMLElement {
         const element = this.createCell(child, className, tagName);
         element.classList.add('fg-w');
-        switch (child.sizing) {
-            case CellSizing.Expand:
-                element.classList.add('fg-w-e');
-                break;
-            case CellSizing.Shrink:
-                element.classList.add('fg-w-s');
-                break;
-        }
         return element;
+    }
+
+    /**
+     * When you bring modifications to the array, you need to recompute each
+     * item position.
+     */
+    protected recomputeChildrenPositions(): void {
+        for (let i = 0; i < this.children.length; ++i) {
+            this.children[i].position = i;
+        }
     }
 
     /**
@@ -648,15 +657,16 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
     /**
      * @inheritdoc
      */
-    addChild(child: T, sizing?: CellSizing, position?: number): void {
+    addChild(child: T, sizing?: CellSizing, alignment?: CellAlignment, position?: number): void {
         if (position) {
             throw "addChild() with explicit position is not implemented yet.";
         }
 
         this.children.push({
+            alignment: alignment ?? CellAlignment.Left,
             item: child,
             position: this.children.length,
-            sizing: sizing || CellSizing.Shrink
+            sizing: sizing ?? CellSizing.Shrink
         });
 
         this.markHasChanged();
@@ -665,47 +675,43 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
     /**
      * @inheritdoc
      */
-    findChildPosition(id: string): number | null {
-        for (const candidate of this.children) {
-            if (candidate.item.getId() === id) {
-                return candidate.position;
-            }
+    removeChild(child: string | number | T): void {
+        const target = this.findChild(child);
+        if (target) {
+            target.item.dispose();
+            this.children.splice(target.position, 1);
+            this.recomputeChildrenPositions();
+            this.repaint();
         }
-        return null;
     }
 
     /**
      * @inheritdoc
      */
-    findChildWithId(id: string): ContainerCell<T> | null {
-        for (const candidate of this.children) {
-            if (candidate.item.getId() === id) {
-                return candidate;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    findChildAtPosition(position: number): ContainerCell<T> | null {
-        for (const candidate of this.children) {
-            if (candidate.position === position) {
-                return candidate;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    findChild(offset: string | number): ContainerCell<T> | null {
+    findChild(offset: string | number | T): ContainerCell<T> | null {
         if (typeof offset === "string") {
-            return this.findChildWithId(offset as string);
+            for (const child of this.children) {
+                if (child.item.getId() === offset) {
+                    return child;
+                }
+            }
+        } else if (typeof offset === "number") {
+            if (offset < 0 ?? offset >= this.children.length) {
+                return null;
+            }
+            for (const child of this.children) {
+                if (child.position === offset) {
+                    return child;
+                }
+            }
+        } else {
+            for (const child of this.children) {
+                if (child.item === offset) {
+                    return child;
+                }
+            }
         }
-        return this.findChildAtPosition(offset as number);
+        return null;
     }
 
     /**

@@ -22,14 +22,14 @@ interface NoteBookPage {
  */
 export class NoteBook extends AbstractPageContainer {
     /**
-     * Currently displayed page (per default the first one).
+     * Current tab being displayed, help for repaint.
      */
-    private displayedPageId: string | null = null;
+    private currentId: string | null = null;
 
     /**
      * Internal quick access to structures.
      */
-    private tabIndex: NoteBookPage[] | null = null;
+    private tabIndex: NoteBookPage[] = [];
 
     /**
      * Select page.
@@ -37,38 +37,39 @@ export class NoteBook extends AbstractPageContainer {
      * @param offset string | number
      *   Page element id, or page position.
      */
-    displayPage(id: string): void {
-        const position = this.findChildPosition(id);
-        let toBeShown: NoteBookPage | null = null;
-
+    displayPage(page: string | number | Page): void {
+        const target = this.findChild(page);
+        if (!target) {
+            throw "Could not find target";
+        }
+        let found: NoteBookPage | null = null;
         for (let tab of this.tabIndex ?? []) {
-            if (position === tab.position) {
-                toBeShown = tab;
-            } else {
-                tab.page.hide();
-                tab.nav.classList.remove("active");
+            if (target.item === tab.page) {
+                found = tab;
+                break;
             }
         }
-
-        if (toBeShown) {
-            toBeShown.page.show();
-            toBeShown.nav.classList.add("active");
+        if (this.hasChanged()) {
+            this.currentId = target.item.getId();
+            this.repaint();
+        } else if (found) {
+            this.displayTab(found);
         }
     }
 
     /**
-     * Get displayed page widget identifier.
+     * Display tab.
      */
-    getDisplayedPageId(): string {
-        if (!this.displayedPageId) {
-            const children = this.getChildren();
-            if (!children.length) {
-                throw "Notebook as no pages.";
+    protected displayTab(tab: NoteBookPage): void {
+        for (let candidate of this.tabIndex ?? []) {
+            if (tab !== candidate) {
+                candidate.page.hide();
+                candidate.nav.classList.remove("active");
             }
-            children[0].item.show();
-            this.displayedPageId = children[0].item.getId();
         }
-        return this.displayedPageId as string;
+        this.currentId = tab.page.getId();
+        tab.page.show();
+        tab.nav.classList.add("active");
     }
 
     /**
@@ -80,6 +81,7 @@ export class NoteBook extends AbstractPageContainer {
         const element = this.createContainer("fg-notebook");
         const navElement = this.doCreateElement("ul", "fg-notebook-nav");
         const pagesElement = this.doCreateElement("div", "fg-notebook-in");
+        let first = null;
 
         for (const child of this.getChildren()) {
             const page = child.item;
@@ -87,7 +89,7 @@ export class NoteBook extends AbstractPageContainer {
             const titleLink = this.doCreateElement("a");
             const currentPageId = page.getId();
             titleLink.setAttribute("href", '#');
-            titleLink.innerText = page.getLabel() || "Page";
+            titleLink.innerText = page.getLabel() ?? "Page";
             titleLink.addEventListener("click", () => this.displayPage(currentPageId));
 
             const titleElement = this.doCreateElement("li", "fg-notebook-tab");
@@ -97,17 +99,26 @@ export class NoteBook extends AbstractPageContainer {
             const pageWrapperElement = this.createCell(child, "fg-notebook-item");
             pagesElement.appendChild(pageWrapperElement);
 
-            this.tabIndex.push({
+            const tab = {
                 nav: titleElement,
                 page: page,
                 position: child.position,
-            });
+            };
+            // Per default, always open the first, but if a selection was
+            // already recorded, restore this one instead, and avoir user
+            // confusion on repaint.
+            if (!first || page.getId() === this.currentId) {
+                first = tab;
+            }
+            this.tabIndex.push(tab);
         }
 
         element.appendChild(navElement);
         element.appendChild(pagesElement);
 
-        this.displayPage(this.getDisplayedPageId());
+        if (first) {
+            this.displayTab(first);
+        }
 
         return element;
     }

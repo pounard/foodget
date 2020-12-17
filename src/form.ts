@@ -38,7 +38,7 @@ export class TextEntry extends AbstractWidget {
         // @todo better handle signals
         element.value = this.value;
         element.addEventListener("change", () => {
-            this.value = element.value || '';
+            this.value = element.value ?? '';
             this.dispatch(Signal.Changed);
         });
         return element;
@@ -101,7 +101,7 @@ export class Button extends AbstractWidget {
      */
     createElement() {
         const element = this.doCreateElement("button", "fg-button");
-        element.innerText = this.getLabel() || '';
+        element.innerText = this.getLabel() ?? '';
         element.addEventListener("click", () => this.dispatch(Signal.Clicked));
         return element;
     }

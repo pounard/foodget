@@ -1,6 +1,6 @@
 import { App, Window } from "../src/app";
 import { ActionBar } from "../src/container";
-import { Signal } from "../src/core";
+import { CellAlignment, CellSizing, Signal } from "../src/core";
 import { Image, Label } from "../src/display";
 import { Button, CheckBox, ImageButton } from "../src/form";
 import { ListBox } from "../src/list";
@@ -11,14 +11,14 @@ export function initListBoxDemo(app: App): Window {
 
     for (const word of WORDS) {
         listbox.addRow(row => {
-            row.addChild(new Label(word));
-            row.addChild(new CheckBox(word));
+            row.addChild(new Label(word), CellSizing.Expand, CellAlignment.Center);
+            row.addChild(new CheckBox(word), CellSizing.Shrink, CellAlignment.Left);
 
             const image = new Image();
             image.setUri(colorImage(randomColor(), 24, 24));
             const button = new ImageButton();
             button.setImage(image);
-            row.addChild(button);
+            row.addChild(button, CellSizing.Shrink, CellAlignment.Left);
         });
     }
 

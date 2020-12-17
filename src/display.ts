@@ -17,7 +17,7 @@ export class Label extends AbstractWidget {
      */
     createElement() {
         const element = this.doCreateElement("p", "fg-label");
-        element.innerText = this.getLabel() || "";
+        element.innerText = this.getLabel() ?? "";
         return element;
     }
 }
@@ -62,7 +62,7 @@ export class Image extends AbstractWidget {
      */
     createElement() {
         const element = this.doCreateElement("img", "fg-image") as HTMLImageElement;
-        element.src = this.uri || '#broken';
+        element.src = this.uri ?? '#broken';
         return element;
     }
 }

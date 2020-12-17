@@ -121,14 +121,21 @@ body {
     justify-content: flex-end;
 }
 
-.fg-w {
-    /* Nothing here? */
-}
-.fg-w-e {
+.fg-c > .fg-w-e {
     flex: auto;
 }
-.fg-w-s {
+.fg-c > .fg-w-s {
     flex: initial;
+}
+
+.fg-w-l {
+    text-align: left;
+}
+.fg-w-c {
+    text-align: center;
+}
+.fg-w-r {
+    text-align: right;
 }
 
 /*
@@ -218,12 +225,16 @@ body {
 .fg-listbox {
     display: table;
     width: 100%;
+    background: white;
 }
 .fg-listbox-row {
     display: table-row;
 }
 .fg-listbox-row-item {
     display: table-cell;
+}
+.fg-listbox-row > .fg-w-s {
+    width: 1%;
 }
 
 /*

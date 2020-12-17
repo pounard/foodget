@@ -1,11 +1,11 @@
-import { App, Window } from "./src/app";
+import { App } from "./src/app";
 import { ActionBar, NoteBook, StatusBar } from "./src/container";
 import { Signal } from "./src/core";
 import { Label, MultilineText } from "./src/display";
 import { Button, TextEntry } from "./src/form";
 // import { MenuBar } from "./src/menu";
 
-import { initFlowBoxDemo } from "./demo/flowbox";
+import { createFlowBoxDemo } from "./demo/flowbox";
 import { initListBoxDemo } from "./demo/listbox";
 
 const INTRO_TEXT = `Welcome in Foo'dget test.
@@ -63,8 +63,8 @@ shadows silent in the trees
 worried glance your eyes`
 ];
 
-function createAddPageForm(app: App, noteBook: NoteBook): Window {
-    const window = new Window("Add new page");
+function createAddPageForm(app: App, noteBook: NoteBook): void {
+    const window = app.createWindow("Add new page");
 
     const name = new TextEntry();
     window.addChild(new Label("Please input name"));
@@ -79,9 +79,8 @@ function createAddPageForm(app: App, noteBook: NoteBook): Window {
         const text = new MultilineText();
         text.setText(GENERATED_HAIKUS[Math.floor(Math.random() * GENERATED_HAIKUS.length)]);
         page.addChild(text);
-        noteBook.repaint();
         noteBook.displayPage(page.getId());
-        app.closeCurrent();
+        app.disposeCurrent();
     });
 
     const actionBar = new ActionBar();
@@ -89,8 +88,7 @@ function createAddPageForm(app: App, noteBook: NoteBook): Window {
     actionBar.addChild(createButton);
 
     window.addChild(actionBar);
-
-    return window;
+    app.open(window);
 }
 
 const element = document.querySelector("#app") as HTMLElement|null;
@@ -116,9 +114,8 @@ if (element) {
     actionBar.addChild(new Label("This is an action bar"));
     mainWindow.addChild(actionBar);
 
-    const flowBoxWindow = initFlowBoxDemo(app);
     const flowBoxOpenButton = new Button("FlowBox");
-    flowBoxOpenButton.connect(Signal.Clicked, () => app.open(flowBoxWindow.getId()));
+    flowBoxOpenButton.connect(Signal.Clicked, () => createFlowBoxDemo(app));
     actionBar.addChild(flowBoxOpenButton);
 
     const listBoxWindow = initListBoxDemo(app);
@@ -138,11 +135,9 @@ if (element) {
     statusBar.addChild(new Label("This is a status bar."));
     mainWindow.addChild(statusBar);
 
-    const addPageWindow = createAddPageForm(app, noteBook);
     const addPageOpenButton = new Button("Add page");
-    addPageOpenButton.connect(Signal.Clicked, () => app.open(addPageWindow.getId()));
+    addPageOpenButton.connect(Signal.Clicked, () => createAddPageForm(app, noteBook));
     actionBar.addChild(addPageOpenButton);
-    app.addChild(addPageWindow);
 
     app.start(element);
 }

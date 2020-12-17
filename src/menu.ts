@@ -12,7 +12,7 @@ export class MenuItemSeparator extends AbstractWidget {
 export class MenuItem extends AbstractWidget {
     createElement() {
         const element = document.createElement("a");
-        element.innerText = this.getLabel() || '';
+        element.innerText = this.getLabel() ?? '';
         element.addEventListener("click", () => this.dispatch(Signal.Clicked));
 
         const wrapperElement = document.createElement("li");
