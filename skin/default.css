@@ -252,8 +252,29 @@ body {
 }
 .fg-listbox-row-item {
     display: table-cell;
+    padding: 0.5rem 1rem;
 }
 .fg-listbox-row > .fg-w-s {
+    width: 1%;
+}
+
+/*
+ * TableView
+ */
+
+.fg-tableview {
+    width: 100%;
+    background: white;
+    border-collapse: collapse;
+}
+.fg-tableview thead {
+    background: #f6f5f4;
+}
+.fg-tableview th, td {
+    border: 1px solid #ccc;
+    padding: 0.5rem 1rem;
+}
+.fg-tableview-row td.fg-w-s {
     width: 1%;
 }
 

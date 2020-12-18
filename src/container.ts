@@ -1,4 +1,4 @@
-import { AbstractContainer, CellAlignment, ContainerCell, Widget } from "./core";
+import { AbstractContainer, CellAlignment, ContainerCell, Widget, WidgetPosition } from "./core";
 
 // @todo centerbox
 // @todo scrolled window
@@ -47,11 +47,8 @@ export class NoteBook extends AbstractContainer<NoteBookPage, HTMLElement> {
 
     /**
      * Select page.
-     *
-     * @param offset string | number
-     *   Page element id, or page position.
      */
-    displayPage(page: string | number | NoteBookPage): void {
+    displayPage(page: string | WidgetPosition | NoteBookPage): void {
         const target = this.findChild(page);
         if (!target) {
             throw "Could not find target";

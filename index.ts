@@ -7,6 +7,7 @@ import { Button, MultilineTextEntry, TextEntry } from "./src/form";
 
 import { createFlowBoxDemo } from "./demo/flowbox";
 import { initListBoxDemo } from "./demo/listbox";
+import { createTableViewDemo } from "./demo/tableview";
 
 const INTRO_TEXT = `Welcome in Foo'dget test.
 
@@ -133,6 +134,10 @@ if (element) {
     const listBoxOpenButton = new Button("ListBox");
     listBoxOpenButton.connect(Signal.Clicked, () => app.open(listBoxWindow.getId()));
     actionBar.addChild(listBoxOpenButton);
+
+    const tableViewOpenButton = new Button("TableView");
+    tableViewOpenButton.connect(Signal.Clicked, () => createTableViewDemo(app));
+    actionBar.addChild(tableViewOpenButton);
 
     const noteBook = new NoteBook();
     mainWindow.addChild(noteBook);

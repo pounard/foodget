@@ -33,6 +33,11 @@ export interface SignalEmitter {
 }
 
 /**
+ * Type alias.
+ */
+export type WidgetPosition = number;
+
+/**
  * Alignement constants for when necessary.
  */
 export enum CellAlignment {
@@ -87,7 +92,7 @@ export interface ContainerCell<T extends Widget, H = any> extends ContainerCellD
     /**
      * Widget position.
      */
-    position: number,
+    position: WidgetPosition,
 
     /**
      * Handle, may be used or not, for example for Page header nav links.
@@ -227,17 +232,17 @@ export interface Container<T extends Widget, H = any> extends Widget {
     /**
      * Add child.
      */
-    addChild(child: T, sizing?: CellSizing, alignment?: CellAlignment, position?: number): void;
+    addChild(child: T, sizing?: CellSizing, alignment?: CellAlignment, position?: WidgetPosition): void;
 
     /**
      * Remove child.
      */
-    removeChild(child: string | number | T): void;
+    removeChild(child: string | WidgetPosition | T): void;
 
     /**
      * Find child matching id (if string) or at position (if number).
      */
-    findChild(offset: string | number | T): ContainerCell<T, H> | null;
+    findChild(offset: string | WidgetPosition | T): ContainerCell<T, H> | null;
 
     /**
      * Get children.
@@ -704,7 +709,7 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
      */
     protected recomputeChildrenPositions(): void {
         for (let i = 0; i < this.children.length; ++i) {
-            this.children[i].position = i;
+            this.children[i].position = i as WidgetPosition;
         }
     }
 
@@ -739,7 +744,7 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     /**
      * @inheritdoc
      */
-    addChild(child: T, sizing?: CellSizing, alignment?: CellAlignment, position?: number): void {
+    addChild(child: T, sizing?: CellSizing, alignment?: CellAlignment, position?: WidgetPosition): void {
         if (position) {
             throw "addChild() with explicit position is not implemented yet.";
         }
@@ -747,7 +752,7 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
         this.children.push({
             alignment: alignment ?? CellAlignment.Left,
             item: child,
-            position: this.children.length,
+            position: this.children.length as WidgetPosition,
             sizing: sizing ?? CellSizing.Shrink
         });
 
@@ -757,7 +762,7 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     /**
      * @inheritdoc
      */
-    removeChild(child: string | number | T): void {
+    removeChild(child: string | WidgetPosition | T): void {
         const target = this.findChild(child);
         if (target) {
             target.item.dispose();
@@ -768,9 +773,23 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     }
 
     /**
+     * Remove all children of this container.
+     */
+    protected removeAllChildren(repaint: boolean = true): void {
+        const children = this.children;
+        this.children = [];
+        for (const child of children) {
+            child.item.dispose();
+        }
+        if (repaint) {
+            this.repaint();
+        }
+    }
+
+    /**
      * @inheritdoc
      */
-    findChild(offset: string | number | T): ContainerCell<T> | null {
+    findChild(offset: string | WidgetPosition | T): ContainerCell<T> | null {
         if (typeof offset === "string") {
             for (const child of this.children) {
                 if (child.item.getId() === offset) {

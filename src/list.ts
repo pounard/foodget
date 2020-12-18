@@ -1,7 +1,5 @@
 import { AbstractContainer, CellAlignment } from "./core";
 
-// @todo flowbox
-// @todo listbox
 // @todo treeview
 
 /**

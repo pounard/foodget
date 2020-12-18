@@ -161,7 +161,9 @@ will function properly but theming and display might be broken in such cases.
  - [x] lazyly render hidden items,
  - [ ] implement everything needed for building forms,
  - [x] flow box, list box
- - [ ] tree view
+ - [ ] data query, provider interfaces and basics,
+ - [ ] table view, using data query and provider,
+ - [ ] tree view using table view,
  - [ ] viewport size constraint and scrolled windows (pending),
  - [ ] ensure that repaint is always automatically called when necessary,
  - [ ] selections,

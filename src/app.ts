@@ -1,4 +1,4 @@
-import { AbstractContainer, ContainerCell } from "./core";
+import { AbstractContainer, ContainerCell, WidgetPosition } from "./core";
 
 // @todo header bar
 // @todo sidebar
@@ -82,7 +82,7 @@ export class App extends AbstractContainer<Window> {
     /**
      * Open window and hide others.
      */
-    open(window: string | number | Window): void {
+    open(window: string | WidgetPosition | Window): void {
         const target = this.findChild(window);
         if (target) {
             if (this.hasChanged()) {
