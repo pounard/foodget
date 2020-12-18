@@ -22,6 +22,53 @@ export class Label extends AbstractWidget {
     }
 }
 
+export type RawHtmlInitializer = (parent: HTMLElement) => void;
+
+/**
+ * Consume a user-given initializer callback which gives you an HTML element
+ * to attach to, and allow you put anything you wish in it. Beware that the
+ * initializer will not be called on repaint(), you will need to invalidate
+ * the component manually.
+ *
+ * You also can just pass raw HTML instead.
+ */
+export class RawHtml extends AbstractWidget {
+    /**
+     * User initializer.
+     */
+    private initializer: RawHtmlInitializer | null = null;
+
+    /**
+     * Raw HTML code from the user if any.
+     */
+    private raw: string | null = null;
+
+    /**
+     * @inheritdoc
+     */
+    constructor(raw: RawHtmlInitializer | string) {
+        super();
+        if (typeof raw === "string") {
+            this.raw = raw;
+        } else {
+            this.initializer = raw;
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    createElement() {
+        const element = this.doCreateElement("div", "fg-raw");
+        if (this.initializer) {
+            this.initializer(element);
+        } else if (this.raw) {
+            element.innerHTML = this.raw;
+        }
+        return element;
+    }
+}
+
 /**
  * Multiline text.
  */

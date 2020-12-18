@@ -138,6 +138,26 @@ body {
     text-align: right;
 }
 
+.fg-c-e {
+    /* if column, then flex: auto */
+}
+.fg-c-s {
+    /* if column, then flex: initial, fixed height to view port, overflow: scroll */
+}
+
+/*
+ * Forms.
+ */
+
+.fg-entry-text, .fg-entry-text-multi {
+    background: white;
+    margin: 0.5rem 1rem;
+}
+
+.fg-entry-text-multi {
+    flex: auto;
+}
+
 /*
  * Page.
  */

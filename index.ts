@@ -1,8 +1,8 @@
 import { App } from "./src/app";
 import { ActionBar, NoteBook, StatusBar } from "./src/container";
 import { Signal } from "./src/core";
-import { Label, MultilineText } from "./src/display";
-import { Button, TextEntry } from "./src/form";
+import { Label, MultilineText, RawHtml } from "./src/display";
+import { Button, MultilineTextEntry, TextEntry } from "./src/form";
 // import { MenuBar } from "./src/menu";
 
 import { createFlowBoxDemo } from "./demo/flowbox";
@@ -70,15 +70,26 @@ function createAddPageForm(app: App, noteBook: NoteBook): void {
     window.addChild(new Label("Please input name"));
     window.addChild(name);
 
+    const contents = new MultilineTextEntry();
+    window.addChild(new Label("You can write raw HTML code below, if left empty, a random haiku will be displayed instead."));
+    window.addChild(contents);
+
     const cancelButton = new Button("Cancel");
     cancelButton.connect(Signal.Clicked, () => app.closeCurrent());
 
     const createButton = new Button("Create");
     createButton.connect(Signal.Clicked, () => {
         const page = noteBook.createPage(name.getValue());
-        const text = new MultilineText();
-        text.setText(GENERATED_HAIKUS[Math.floor(Math.random() * GENERATED_HAIKUS.length)]);
-        page.addChild(text);
+
+        const pageContent = contents.getValue().trim();
+        if (pageContent) {
+            page.addChild(new RawHtml(pageContent));
+        } else {
+            const text = new MultilineText();
+            text.setText(GENERATED_HAIKUS[Math.floor(Math.random() * GENERATED_HAIKUS.length)]);
+            page.addChild(text);
+        }
+
         noteBook.displayPage(page.getId());
         app.disposeCurrent();
     });

@@ -33,8 +33,39 @@ export class TextEntry extends AbstractWidget {
      * @inheritdoc
      */
     createElement() {
-        const element = this.doCreateElement("input", "fg-button") as HTMLInputElement;
+        const element = this.doCreateElement("input", "fg-entry-text") as HTMLInputElement;
         element.setAttribute("type", 'text');
+        // @todo better handle signals
+        element.value = this.value;
+        element.addEventListener("change", () => {
+            this.value = element.value ?? '';
+            this.dispatch(Signal.Changed);
+        });
+        return element;
+    }
+}
+
+/**
+ * Multiline text entry.
+ *
+ * We are in a browser, this will be a vanilla textarea HTML element.
+ */
+export class MultilineTextEntry extends AbstractWidget {
+    private value: string = '';
+
+    setValue(value: string): void {
+        this.value = value;
+    }
+
+    getValue(): string {
+        return this.value;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    createElement() {
+        const element = this.doCreateElement("textarea", "fg-entry-text-multi") as HTMLInputElement;
         // @todo better handle signals
         element.value = this.value;
         element.addEventListener("change", () => {
