@@ -35,6 +35,8 @@ UIs. Pease see https://developer.gnome.org/gtk4/4.0/ch08.html
 
 # Design and runtime flow
 
+## Introduction
+
 It's an old-fashioned widget tree, pretty much like any other existing tooking
 modern or old that exists. When a parent is renderered, it triggers its
 children rendering as well. When a parent is disposed, it triggers its children
@@ -42,25 +44,62 @@ disposal as well.
 
 Every widget or container exposes a set of signals, on which you can arbitrarily
 connect code to, in order to react upon user actions. Signals are custom, not
-DOM based, this is an explicit choice that as a user, you will never manipulate
-anything which is DOM related: this opens the door to alternate rendering
-pipelines than the browser.
+DOM based, this is an explicit design choice that as a user, you will never
+manipulate anything which is DOM related: this opens the door to alternate
+rendering pipelines than the browser.
 
-Runtime flow is rather easy: create an `App` instance, build one or more
-`Window` objets attached to it, connect to signals, then run it!
+## Rendering pipeline
+
+As of now, rendering pipeline is hardcoded into containers and widgets, each
+widget (containers are widgets) has a `Widget.createElement(): HTMLElement`
+method which is responsible for rendering self.
+
+Basically, when you call `App.start()`, it will determine the currently opened
+`Window` object, and trigger `Widget.createElement()` over it then attach the
+returned element into the DOM once finished. Every other `Widget` instance will
+be built recursively.
+
+`Widget` instances attempt to maintain an updated state, subsequent rebuild
+attempt will not rebuild unmodified children. Some bugs are probably still
+hidding in this particular piece of code. When you do a lot of modifications
+at runtime, it's recommended that you manually attempt `repaint()` calls if
+you experience an UI that doesn't refresh correctly.
+
+Future plans are to decouple the rendering and get it out from the main API
+and keep the user-facing API as a UI builder only, independently of the runtime
+environment. This means that in the future, you could create a virtual UI in
+`node` for example, in order to be able to do proper unit or functional testing.
+
+## Dynamic rendering
+
+Widgets and containers can be modified and repaint at any moment, including
+during runtime. In most cases, when you modify childs, you'll need to call
+the `Widget.repaint()` method manually to refresh the UI. This limitation is
+known, more elegant solutions for API users will be provided in a later
+development phase.
+
+## Signals
+
+An UI is useless without user interaction: each widget will emit signals on
+which you can listen to respond.
+
+All known signals are described on the `Signal` enum found in `src/core.ts`,
+you may connect to any of those signals on any of the widgets, but some such
+as clicked may never be raised on some widgets.
+
+## Selections, Hotkeys, Accelerators
+
+For now, all theses features are not implemented. They will be, but there is
+no defined roadmap.
 
 # Widgets
 
 ## Existing containers
 
- - `App` is the main application window, it is a `Page` container on which
-   you can additionaly attach various other specific widgets.
- - `Page` is the equivalent of an ordinary window, it can contain anything.
-   Moreover it can be stacked in containers which are page containers, such
-   as the `Notebook` window. Usually, when a `Page` is displayed, siblings
-   are hidden.
- - `Window` is pretty similar to page, except it can only exist as an `App`
-   direct child. Only one `Window` at a time can be displayed.
+ - `App` is the main application window, it is a `Window` container.
+ - `Window` is the most basic container, it can exist only as an `App` child,
+   an `App` may hold as many `Window` as you need, but it can only display
+   one at a time.
  - `Box` is an arbitrary widget container, the same way `Page` is, it can
    contain anything. It can be stacked in box containers: `HorizontalBox`
    and `VerticalBox`.
@@ -75,6 +114,12 @@ Runtime flow is rather easy: create an `App` instance, build one or more
  - `ListBox` displays rows in tabbed fashion,
  - `FlowBox` displays items arbitrarily in lines, with line wrap when going
    out of view port.
+
+Note: most containers can be attached into any other container, but it might
+semantically make no sense. For example, `StatusBar` and `ActionBar` are meant
+to be attached to `Window` containers only, but you can put them anywhere else
+such as in `NoteBookPage` instances, or even in `ListBoxRow` instances. They
+will function properly but theming and display might be broken in such cases.
 
 ## Existing widgets
 
@@ -118,6 +163,7 @@ Runtime flow is rather easy: create an `App` instance, build one or more
  - [x] flow box, list box
  - [ ] tree view
  - [ ] viewport size constraint and scrolled windows (pending),
+ - [ ] ensure that repaint is always automatically called when necessary,
  - [ ] selections,
  - [ ] shortcuts and accelerators,
  - [ ] accessibility!
