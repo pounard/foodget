@@ -1,4 +1,4 @@
-import { AbstractContainer, CellAlignment, Widget } from "./core";
+import { AbstractContainer, CellAlignment } from "./core";
 
 // @todo flowbox
 // @todo listbox
@@ -7,7 +7,7 @@ import { AbstractContainer, CellAlignment, Widget } from "./core";
 /**
  * FlowBox displays item the same way as CSS flexbox would. 
  */
-export class FlowBox extends AbstractContainer<Widget> {
+export class FlowBox extends AbstractContainer {
     /**
      * @inheritdoc
      */
@@ -35,7 +35,7 @@ type ListBoxRowInitializer = (row: ListBoxRow) => void;
 /**
  * ListBox row.
  */
-export class ListBoxRow extends AbstractContainer<Widget> {
+export class ListBoxRow extends AbstractContainer {
     /**
      * @inheritdoc
      */

@@ -49,19 +49,55 @@ export enum CellSizing {
     Shrink,
 }
 
+/**
+ * Shortcut for a few methods.
+ */
 export interface ContainerCellDisplay {
     alignment: CellAlignment,
     sizing: CellSizing,
 }
 
 /**
- * Because we need a bit more than just a Widget here.
+ * Containers always expand horizontally, you can only control their vertical
+ * sizing.
  */
-export interface ContainerCell<T extends Widget> extends ContainerCellDisplay {
-    item: T,
-    position: number,
+export enum ContainerSizing {
+    /**
+     * Will let the container expand outside of view port, thus will expand
+     * the window it is contained in as well.
+     */
+    Expand,
+
+    /**
+     * Will force the container to adapt to the window size, and add a scrollbar
+     * within.
+     */
+    Scroll,
 }
 
+/**
+ * Because we need a bit more than just a Widget here.
+ */
+export interface ContainerCell<T extends Widget, H = any> extends ContainerCellDisplay {
+    /**
+     * Widget instance.
+     */
+    item: T,
+
+    /**
+     * Widget position.
+     */
+    position: number,
+
+    /**
+     * Handle, may be used or not, for example for Page header nav links.
+     */
+    handle?: H,
+}
+
+/**
+ * Type alias for user CSS class list.
+ */
 export type Classes = null | string | string[];
 
 /*
@@ -167,7 +203,17 @@ export interface Widget extends SignalEmitter {
  * Usually containers do not provide user interaction other than showing or
  * hiding sub-elements on demand.
  */
-export interface Container<T extends Widget> extends Widget {
+export interface Container<T extends Widget, H = any> extends Widget {
+    /**
+     * Set container sizing behaviour.
+     */
+    setContainerSizing(sizing: ContainerSizing): void;
+
+    /**
+     * Get container sizing behaviour.
+     */
+    getContainerSizing(): ContainerSizing;
+
     /**
      * Set container cell alignment.
      */
@@ -191,7 +237,7 @@ export interface Container<T extends Widget> extends Widget {
     /**
      * Find child matching id (if string) or at position (if number).
      */
-    findChild(offset: string | number | T): ContainerCell<T> | null;
+    findChild(offset: string | number | T): ContainerCell<T, H> | null;
 
     /**
      * Get children.
@@ -199,7 +245,7 @@ export interface Container<T extends Widget> extends Widget {
      * @internal
      *   You should not use this as an API user, it is here for internal use.
      */
-    getChildren(): ContainerCell<T>[];
+    getChildren(): ContainerCell<T, H>[];
 }
 
 /**
@@ -503,16 +549,21 @@ export abstract class AbstractWidget implements Widget {
  * Whereas it is possible to fully implement the Widget interface by yourself
  * it is stronly advised to extend this instead.
  */
-export abstract class AbstractContainer<T extends Widget> extends AbstractWidget implements Container<T> {
+export abstract class AbstractContainer<T extends Widget = Widget, H = any> extends AbstractWidget implements Container<T, H> {
     /**
      * Container widget children.
      */
-    private children: ContainerCell<T>[] = [];
+    private children: ContainerCell<T, H>[] = [];
 
     /**
      * Container cell alignment.
      */
-    private alignment: CellAlignment = CellAlignment.Left;
+    private cellAlignment: CellAlignment = CellAlignment.Left;
+
+    /**
+     * Current container sizing mode.
+     */
+    private containerSizing: ContainerSizing = ContainerSizing.Scroll;
 
     /**
      * Default constructor.
@@ -526,7 +577,10 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
         this.configure();
     }
 
-    protected doApplyAlignment(element: HTMLElement, display: ContainerCellDisplay): void {
+    /**
+     * Apply cell sizing and alignment on the given HTML element.
+     */
+    protected applyCellSizing(element: HTMLElement, display: ContainerCellDisplay): void {
         switch (display.sizing) {
             case CellSizing.Expand:
                 element.classList.add('fg-w-e');
@@ -544,6 +598,20 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
                 break;
             case CellAlignment.Right:
                 element.classList.add('fg-w-r');
+                break;
+        }
+    }
+
+    /**
+     * Apply container sizing on the given HTML  element.
+     */
+    protected applyContainerSizing(element: HTMLElement, sizing: ContainerSizing): void {
+        switch (sizing) {
+            case ContainerSizing.Expand:
+                element.classList.add('fg-c-e');
+                break;
+            case ContainerSizing.Scroll:
+                element.classList.add('fg-c-s');
                 break;
         }
     }
@@ -569,14 +637,14 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
         if (tagName) {
             const element = document.createElement(tagName);
             this.doApplyClasses(element, className);
-            this.doApplyAlignment(element, child);
+            this.applyCellSizing(element, child);
             element.setAttribute("id", child.item.getId());
             element.appendChild(child.item.getElement());
             return element;
         }
         const element = child.item.getElement();
         this.doApplyClasses(element, className);
-        this.doApplyAlignment(element, child);
+        this.applyCellSizing(element, child);
         element.setAttribute("id", child.item.getId());
         return element;
     }
@@ -587,7 +655,7 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
     protected createAlignedContainer(className?: Classes, tagName: string = "div"): HTMLElement {
         const element = this.createContainer(className, tagName);
         element.classList.add('fg-c');
-        switch (this.alignment) {
+        switch (this.cellAlignment) {
             case CellAlignment.Left:
                 element.classList.add('fg-c-l');
                 break;
@@ -607,7 +675,7 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
     protected createAlignedElement(className?: Classes, tagName: string = "div"): HTMLElement {
         const element = this.doCreateElement(tagName, className);
         element.classList.add('fg-c');
-        switch (this.alignment) {
+        switch (this.cellAlignment) {
             case CellAlignment.Left:
                 element.classList.add('fg-c-l');
                 break;
@@ -643,15 +711,29 @@ export abstract class AbstractContainer<T extends Widget> extends AbstractWidget
     /**
      * @inheritdoc
      */
+    setContainerSizing(sizing: ContainerSizing): void {
+        this.containerSizing = sizing;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    getContainerSizing(): ContainerSizing {
+        return this.containerSizing;
+    }
+
+    /**
+     * @inheritdoc
+     */
     setCellAlignment(alignment: CellAlignment): void {
-        this.alignment = alignment;
+        this.cellAlignment = alignment;
     }
 
     /**
      * @inheritdoc
      */
     getCellAlignment(): CellAlignment {
-        return this.alignment;
+        return this.cellAlignment;
     }
 
     /**

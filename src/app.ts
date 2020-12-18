@@ -1,49 +1,8 @@
-import { AbstractContainer, ContainerCell, Widget } from "./core";
+import { AbstractContainer, ContainerCell } from "./core";
 
 // @todo header bar
 // @todo sidebar
 // @todo popover
-
-export enum PageSizing {
-    Auto,
-    Scroll,
-}
-
-/**
- * Page is a simple widget container with a name.
- */
-export class Page extends AbstractContainer<Widget> {
-    /**
-     * Current page sizing mode.
-     */
-    private sizing: PageSizing = PageSizing.Auto;
-
-    setPageSizing(sizing: PageSizing): void {
-        this.sizing = sizing;
-    }
-
-    getSizing(): PageSizing {
-        return this.sizing;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    createElement() {
-        const element = this.createContainer("fg-page", "section");
-        if (this.sizing === PageSizing.Scroll) {
-            element.classList.add("fg-v-scroll");
-        }
-        // @todo Menu bar, if any
-        // @todo Status message display, if any
-        // @todo Intermediate div for content
-        for (const child of this.getChildren()) {
-            element.appendChild(this.createCell(child, "fg-page-item"));
-        }
-        // @todo Status bar, if any
-        return element;
-    }
-}
 
 /**
  * Window is top-level element for anything.
@@ -51,7 +10,7 @@ export class Page extends AbstractContainer<Widget> {
  * Window instances should not be created outside for App.createWindow()
  * because the App component will handle open/close for you.
  */
-export class Window extends Page {
+export class Window extends AbstractContainer {
     /**
      * @inheritdoc
      */
@@ -71,20 +30,6 @@ export class Window extends Page {
             wrapperElement.appendChild(this.createCell(child, null, null));
         }
         return element;
-    }
-}
-
-/**
- * Abstract page container, because we do not like to repeat ourselves.
- */
-export abstract class AbstractPageContainer extends AbstractContainer<Page> {
-    /**
-     * Create new page instance and attach it as a child of this instance.
-     */
-    createPage(label?: string): Page {
-        const page = new Page(label);
-        this.addChild(page);
-        return page;
     }
 }
 

@@ -1,5 +1,4 @@
-import { AbstractPageContainer, Page } from "./app";
-import { AbstractContainer, CellAlignment, Widget } from "./core";
+import { AbstractContainer, CellAlignment, ContainerCell, Widget } from "./core";
 
 // @todo centerbox
 // @todo scrolled window
@@ -9,27 +8,42 @@ import { AbstractContainer, CellAlignment, Widget } from "./core";
 // @todo infobar
 
 /**
- * Internal NoteBook container index structure.
+ * NoteBookPage widget, for NoteBook container.
  */
-interface NoteBookPage {
-    readonly nav: HTMLElement;
-    readonly page: Page;
-    readonly position: number;
+export class NoteBookPage extends AbstractContainer {
+    /**
+     * @inheritdoc
+     */
+    createElement() {
+        const element = this.createContainer("fg-page", "section");
+        // @todo Menu bar, if any
+        // @todo Status message display, if any
+        // @todo Intermediate div for content
+        for (const child of this.getChildren()) {
+            element.appendChild(this.createCell(child, "fg-page-item"));
+        }
+        // @todo Status bar, if any
+        return element;
+    }
 }
 
 /**
  * NoteBook container.
  */
-export class NoteBook extends AbstractPageContainer {
+export class NoteBook extends AbstractContainer<NoteBookPage, HTMLElement> {
     /**
      * Current tab being displayed, help for repaint.
      */
     private currentId: string | null = null;
 
     /**
-     * Internal quick access to structures.
+     * Create new page instance and attach it as a child of this instance.
      */
-    private tabIndex: NoteBookPage[] = [];
+    createPage(label?: string): NoteBookPage {
+        const page = new NoteBookPage(label);
+        this.addChild(page);
+        return page;
+    }
 
     /**
      * Select page.
@@ -37,51 +51,47 @@ export class NoteBook extends AbstractPageContainer {
      * @param offset string | number
      *   Page element id, or page position.
      */
-    displayPage(page: string | number | Page): void {
+    displayPage(page: string | number | NoteBookPage): void {
         const target = this.findChild(page);
         if (!target) {
             throw "Could not find target";
         }
-        let found: NoteBookPage | null = null;
-        for (let tab of this.tabIndex ?? []) {
-            if (target.item === tab.page) {
-                found = tab;
-                break;
-            }
-        }
         if (this.hasChanged()) {
             this.currentId = target.item.getId();
             this.repaint();
-        } else if (found) {
-            this.displayTab(found);
+        } else {
+            // Repaint will display tab.
+            this.displayTab(target);
         }
     }
 
     /**
      * Display tab.
      */
-    protected displayTab(tab: NoteBookPage): void {
-        for (let candidate of this.tabIndex ?? []) {
-            if (tab !== candidate) {
-                candidate.page.hide();
-                candidate.nav.classList.remove("active");
+    protected displayTab(target: ContainerCell<NoteBookPage, HTMLElement>): void {
+        for (const candidate of this.getChildren()) {
+            if (target !== candidate) {
+                candidate.item.hide();
+                if (candidate.handle) {
+                    candidate.handle.classList.remove("active");
+                }
             }
         }
-        this.currentId = tab.page.getId();
-        tab.page.show();
-        tab.nav.classList.add("active");
+        this.currentId = target.item.getId();
+        target.item.show();
+        if (target.handle) {
+            target.handle.classList.add("active");
+        }
     }
 
     /**
      * @inheritdoc
      */
     createElement() {
-        this.tabIndex = [];
-
         const element = this.createContainer("fg-notebook");
         const navElement = this.doCreateElement("ul", "fg-notebook-nav");
         const pagesElement = this.doCreateElement("div", "fg-notebook-in");
-        let first = null;
+        let activePage = null;
 
         for (const child of this.getChildren()) {
             const page = child.item;
@@ -96,28 +106,24 @@ export class NoteBook extends AbstractPageContainer {
             titleElement.appendChild(titleLink);
             navElement.appendChild(titleElement);
 
-            const pageWrapperElement = this.createCell(child, "fg-notebook-item");
-            pagesElement.appendChild(pageWrapperElement);
+            // Affect the title element as being the cell handle.
+            child.handle = titleElement;
 
-            const tab = {
-                nav: titleElement,
-                page: page,
-                position: child.position,
-            };
+            pagesElement.appendChild(this.createCell(child, "fg-notebook-item", null));
+
             // Per default, always open the first, but if a selection was
             // already recorded, restore this one instead, and avoir user
             // confusion on repaint.
-            if (!first || page.getId() === this.currentId) {
-                first = tab;
+            if (!activePage || page.getId() === this.currentId) {
+                activePage = child;
             }
-            this.tabIndex.push(tab);
         }
 
         element.appendChild(navElement);
         element.appendChild(pagesElement);
 
-        if (first) {
-            this.displayTab(first);
+        if (activePage) {
+            this.displayTab(activePage);
         }
 
         return element;
@@ -127,7 +133,7 @@ export class NoteBook extends AbstractPageContainer {
 /**
  * ActionBar is wide, displays inline, and aligns items at the right.
  */
-export class ActionBar extends AbstractContainer<Widget> {
+export class ActionBar extends AbstractContainer {
     /**
      * @inheritdoc
      */
@@ -150,7 +156,7 @@ export class ActionBar extends AbstractContainer<Widget> {
 /**
  * StatusBar is small, displays inline, and aligns items at the left.
  */
-export class StatusBar extends AbstractContainer<Widget> {
+export class StatusBar extends AbstractContainer {
     /**
      * @inheritdoc
      */
