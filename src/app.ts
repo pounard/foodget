@@ -1,7 +1,6 @@
 import { AbstractContainer, ContainerCell, WidgetPosition } from "./core";
 
 // @todo header bar
-// @todo sidebar
 // @todo popover
 
 /**
@@ -11,6 +10,15 @@ import { AbstractContainer, ContainerCell, WidgetPosition } from "./core";
  * because the App component will handle open/close for you.
  */
 export class Window extends AbstractContainer {
+    /**
+     * Create and attach sidebar.
+     */
+    createSidebar(label?: string) {
+        const sidebar = new SideBar(label);
+        this.addChild(sidebar);
+        return sidebar;
+    }
+
     /**
      * @inheritdoc
      */
@@ -23,11 +31,49 @@ export class Window extends AbstractContainer {
         labelElement.appendChild(labelTextElement);
         element.appendChild(labelElement);
 
-        const wrapperElement = this.doCreateElement("div", "fg-window-in");
-        element.appendChild(wrapperElement);
+        const sidebarElements: HTMLElement[] = [];
 
+        const wrapperElement = this.doCreateElement("div", "fg-window-in");
         for (const child of this.getChildren()) {
-            wrapperElement.appendChild(this.createCell(child, null, null));
+            if (child.item instanceof SideBar) {
+                sidebarElements.push(this.createCell(child, null, null));
+            } else {
+                wrapperElement.appendChild(this.createCell(child, null, null));
+            }
+        }
+
+        if (sidebarElements.length) {
+            const outerWrapperElement = this.doCreateElement("div", "fg-window-out");
+            for (const sidebarElement of sidebarElements) {
+                outerWrapperElement.appendChild(sidebarElement);
+            }
+            outerWrapperElement.appendChild(wrapperElement);
+            element.appendChild(outerWrapperElement);
+        } else {
+            element.appendChild(wrapperElement);
+        }
+
+        return element;
+    }
+}
+
+/**
+ * SideBar is a component that should only attach to the Window container.
+ *
+ * It is meant to attach at the left side of the screen, and show/hide depending
+ * on the screen size (for mobile, responsive version would collapse).
+ *
+ * Any usage outside of the Window element will make it behave as a simple
+ * transparent container.
+ */
+export class SideBar extends AbstractContainer {
+    /**
+     * @inheritdoc
+     */
+    createElement() {
+        const element = this.createContainer("fg-sidebar", "div");
+        for (const child of this.getChildren()) {
+            element.appendChild(this.createCell(child, "fg-sidebar-item"));
         }
         return element;
     }

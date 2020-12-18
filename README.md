@@ -164,6 +164,7 @@ will function properly but theming and display might be broken in such cases.
  - [x] flow box, list box
  - [x] data query, provider interfaces and basics,
  - [x] table view, using data query and provider,
+ - [ ] sidebar (pending),
  - [ ] explode Widget and Container interfaces in more semantic types,
  - [ ] implement everything needed for building forms,
  - [ ] pager widget for data queries,

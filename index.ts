@@ -107,6 +107,9 @@ const element = document.querySelector("#app") as HTMLElement|null;
 if (element) {
     const app = new App();
     const mainWindow = app.createWindow("Welcome in my first app !");
+    const sidebar = mainWindow.createSidebar();
+
+    sidebar.addChild(new Label("This is a SideBar!"));
 
     /*
     const menuBar = new MenuBar();

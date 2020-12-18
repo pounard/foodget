@@ -31,6 +31,16 @@ body {
     flex: initial;
 }
 
+.fg-window-out {
+    display: flex;
+    flex: auto;
+}
+.fg-window-out > * {
+    flex: auto;
+}
+.fg-window-out > .fg-sidebar {
+    flex: initial;
+}
 .fg-window-in {
     display: flex;
     flex-direction: column;
@@ -143,6 +153,15 @@ body {
 }
 .fg-c-s {
     /* if column, then flex: initial, fixed height to view port, overflow: scroll */
+}
+
+/*
+ * SideBar
+ */
+
+.fg-sidebar {
+    border-right: 1px solid #ccc;
+    padding: 0.5rem 1rem;
 }
 
 /*
