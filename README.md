@@ -11,23 +11,23 @@ meaning of components, and state. Also because manipulating the DOM too much
 makes you anxious, as well as writing too much JavaScript. I'd like to keep
 a sane health.
 
-Deep down inside of me, I thing that JavaScript and everything being in the
+Deep down inside of me, I think that JavaScript and everything being in the
 browser nowadays are the two worst things that happened to IT during these
 last 30 years. Most old-fashioned UI toolkits are now modern too, they have
 enough widgets to implement all the needs and beyond, you don't need HTML/CSS
 to write a good UI.
 
 Aside of that, Vue, React and Angular are all very good frameworks, I love each
-one of them, for many reasons. But sadly, maintaining applications using them
-on the long run when you're not a _type in framework name_ specialized developer
-is just so insanely and uselessly difficult. They also do not suit very well for
-building classical business orientend software packages. Common legacy
-old-fashion toolkits are well-suited for this, and are always very simple to
-use, they are explicit semantically, you write code, not HTML, and force you to
-be explicit in your intent.
+one of them, each one for different reasons. But sadly, maintaining applications
+using them on the long run when you're not a *[type here framework name]*
+specialized developer is just so insanely and uselessly difficult. They also do
+not suit very well for building classical business orientend software packages.
+Common legacy old-fashion toolkits are well-suited for this, and most of time
+are simple to use. They also are explicit semantically and force you to be
+explicit in your intent.
 
-No, this API will never have any other depencency than TypeScript, webpack for
-bundling (although this might change) and your browser.
+This API will never have any other depencency than TypeScript, webpack for
+bundling (although this might change) and your browser for running it.
 
 This API intents to implement a subset of GTK4 base widgets (in a simpler form)
 which altogether are more than enough to build super complete, super powerful
