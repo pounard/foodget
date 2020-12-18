@@ -161,11 +161,12 @@ will function properly but theming and display might be broken in such cases.
  - [x] implement a much more robust signal API,
  - [x] make rendering more robust,
  - [x] lazyly render hidden items,
- - [ ] implement everything needed for building forms,
  - [x] flow box, list box
  - [x] data query, provider interfaces and basics,
- - [ ] pager widget for data queries,
  - [x] table view, using data query and provider,
+ - [ ] explode Widget and Container interfaces in more semantic types,
+ - [ ] implement everything needed for building forms,
+ - [ ] pager widget for data queries,
  - [ ] tree view using table view,
  - [ ] viewport size constraint and scrolled windows (pending),
  - [ ] ensure that repaint is always automatically called when necessary,
@@ -173,6 +174,7 @@ will function properly but theming and display might be broken in such cases.
  - [ ] shortcuts and accelerators,
  - [ ] accessibility!
  - [ ] unit test it (single thing I think I can't do in (Type|Java)Script,
+ - [ ] investigate chaining method calls on widgets to avoid temp vars,
  - [ ] make theming easier,
  - [ ] provide a few more themes,
  - [ ] decouple rendering (why couldn't it be WebGL or canvas?).
