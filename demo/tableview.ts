@@ -19,7 +19,7 @@ class MyDataProvider implements TableDataProvider<Color> {
         return (row: Container, item: Color) => {
             row.addChild(new Label(item.name), CellSizing.Expand, CellAlignment.Left);
             row.addChild(new RawHtml(`<code>#${item.hexcode}</code>`), CellSizing.Expand, CellAlignment.Center);
-            row.addChild(new RawHtml(`<img src=${colorImage(item.hexcode, 20, 20)}/>`), CellSizing.Shrink, CellAlignment.Center);
+            row.addChild(new RawHtml(`<img src="${colorImage(item.hexcode, 20, 20)}"/>`), CellSizing.Shrink, CellAlignment.Center);
         };
     }
 
