@@ -114,6 +114,8 @@ no defined roadmap.
  - `ListBox` displays rows in tabbed fashion,
  - `FlowBox` displays items arbitrarily in lines, with line wrap when going
    out of view port.
+ - `TreeView` uses a `TableDataProvider<T>` where `T` is any type of yours,
+   and paginate your data in a sortable table display.
 
 Note: most containers can be attached into any other container, but it might
 semantically make no sense. For example, `StatusBar` and `ActionBar` are meant
@@ -161,8 +163,9 @@ will function properly but theming and display might be broken in such cases.
  - [x] lazyly render hidden items,
  - [ ] implement everything needed for building forms,
  - [x] flow box, list box
- - [ ] data query, provider interfaces and basics,
- - [ ] table view, using data query and provider,
+ - [x] data query, provider interfaces and basics,
+ - [ ] pager widget for data queries,
+ - [x] table view, using data query and provider,
  - [ ] tree view using table view,
  - [ ] viewport size constraint and scrolled windows (pending),
  - [ ] ensure that repaint is always automatically called when necessary,

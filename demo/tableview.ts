@@ -1,9 +1,10 @@
+import { DataColumnSpec, DataQuery, SortOrder, TableDataProvider } from "../src/data";
 import { App, Window } from "../src/app";
 import { ActionBar } from "../src/container";
-import { CellAlignment, CellSizing, Signal } from "../src/core";
+import { CellAlignment, CellSizing, Container, Signal } from "../src/core";
 import { Label, RawHtml } from "../src/display";
 import { Button } from "../src/form";
-import { DataColumnSpec, DataQuery, TableDataProvider, TableView, TableViewRow } from "../src/table";
+import { TableView } from "../src/table";
 
 interface Color {
     readonly name: string;
@@ -15,7 +16,7 @@ class MyDataProvider implements TableDataProvider<Color> {
      * @inheritdoc
      */
     get initializer() {
-        return (row: TableViewRow, item: Color) => {
+        return (row: Container, item: Color) => {
             row.addChild(new Label(item.name), CellSizing.Expand, CellAlignment.Left);
             row.addChild(new RawHtml(`<code>#${item.hexcode}</code>`), CellSizing.Expand, CellAlignment.Center);
             row.addChild(new RawHtml(`<img src=${colorImage(item.hexcode, 20, 20)}/>`), CellSizing.Shrink, CellAlignment.Center);
@@ -29,9 +30,34 @@ class MyDataProvider implements TableDataProvider<Color> {
         // You could use fetch here.
         return (new Promise<Color[]>((resolve) => resolve(COLORS)))
             .then(colors => {
+                let ret: Color[] | undefined;
+
+                switch (query.sortColumn) {
+                    case "name":
+                        if (query.sortOrder === SortOrder.Desc) {
+                            ret = colors.sort((a, b) => a.name.localeCompare(b.name, 'fr', {ignorePunctuation: true}));
+                        } else {
+                            ret = colors.sort((a, b) => b.name.localeCompare(a.name, 'fr', {ignorePunctuation: true}));
+                        }
+                        break;
+
+                    case "hexcode":
+                        if (query.sortOrder === SortOrder.Asc) {
+                            ret = colors.sort((a, b) => a.hexcode.localeCompare(b.hexcode));
+                        } else {
+                            ret = colors.sort((a, b) => b.hexcode.localeCompare(a.hexcode));
+                        }
+                        break;
+
+                    default:
+                        ret = colors;
+                }
+
                 return {
-                    count: colors.length,
-                    items: colors,
+                    count: ret.length,
+                    sortColumn: query.sortColumn ?? "name",
+                    sortOrder: query.sortOrder ?? SortOrder.Asc,
+                    items: ret,
                 };
             })
         ;
@@ -48,6 +74,7 @@ class MyDataProvider implements TableDataProvider<Color> {
         }, {
             field: "hexcode",
             label: "CSS hexcode",
+            sortable: true,
         }, {
             field: "display",
             label: "Sample",
@@ -60,7 +87,9 @@ export function createTableViewDemo(app: App): void {
     const table = new TableView<Color>(new MyDataProvider());
 
     const actionBar = new ActionBar();
-    actionBar.addChild(new Label(`This tableview contains ${1} elements`));
+    const actionBarLabel = new Label(`This tableview is not loaded yet.`);
+    actionBar.addChild(actionBarLabel);
+
     const closeButton = new Button("Close");
     closeButton.connect(Signal.Clicked, () => app.disposeCurrent())
     actionBar.addChild(closeButton)
@@ -70,6 +99,13 @@ export function createTableViewDemo(app: App): void {
     app.addChild(window);
 
     // Always trigger the initial load manually?
+    table.connect(Signal.TableDataRefreshed, (table) => {
+        const response = table.getCurrentResponse();
+        const currentPage = response.page ?? 1;
+        const totalPageCount = Math.ceil((response.total ?? 1) / (response.limit ?? response.count));
+        actionBarLabel.setLabel(`This TableView displays ${response.count} / ${response.total ?? response.count} items, in page ${currentPage} / ${totalPageCount}`);
+        actionBarLabel.repaint();
+    });
     table.refresh();
 
     app.open(window);
@@ -83,7 +119,7 @@ function colorImage(hexcode: string, width: number, height: number): string {
     if (!ctx) {
         throw "Could not create canvas context";
     }
-    ctx.fillStyle = `#(${hexcode})`
+    ctx.fillStyle = `#${hexcode}`
     ctx.fillRect(0, 0, width, height);
     return canvas.toDataURL();
 }

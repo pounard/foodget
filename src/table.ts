@@ -1,146 +1,5 @@
-import { AbstractContainer, CellAlignment } from "./core";
-
-/**
- * Column position (number, starts with 0).
- */
-export type ColumnPosition = number;
-
-/**
- * Column technical name.
- */
-export type ColumnName = string;
-
-/**
- * Filter query hashmap type definition.
- */
-export interface FilterQuery {
-    [details: string]: string;
-}
-
-/**
- * Sort order.
- */
-export enum SortOrder {
-    /**
-     * Ascending.
-     */
-    ASC = "asc",
-
-    /**
-     * Descending.
-     */
-    DESC = "desc",
-}
-
-/**
- * Column specification.
- */
-export interface DataColumnSpec<T> {
-    /**
-     * Technical column name for external software exchange.
-     */
-    readonly field: ColumnName;
-
-    /**
-     * Column label (displayed in table).
-     */
-    readonly label?: string;
-
-    /**
-     * Column position in display (unused for now).
-     */
-    readonly position?: ColumnPosition;
-
-    /**
-     * Is this column sortable, undefined means false.
-     */
-    readonly sortable?: boolean;
-}
-
-/**
- * Data query for data source/provider.
- */
-export interface DataQuery<T> {
-    /**
-     * Page number, starts at 1, undefined is one.
-     */
-    readonly page?: number,
-
-    /**
-     * Items per page, if 0 or undefined, let the data provider decide.
-     */
-    readonly limit?: number,
-
-    /**
-     * Sort column name.
-     */
-    readonly sortColumn?: ColumnName;
-
-    /**
-     * Sort column order.
-     */
-    readonly sortOrder?: SortOrder,
-
-    /**
-     * Query filters, arbitrary set of strings.
-     */
-    readonly query?: FilterQuery,
-}
-
-/**
- * Row item initializer.
- */
-export type TableViewRowInitializer<T> = (row: TableViewRow, item: T) => void;
-
-/**
- * We need a response, because provider might change the query details.
- */
-export interface DataResponse<T> {
-    /**
-     * Page number, starts at 1, undefined is one.
-     */
-    readonly page?: number,
-
-    /**
-     * Items per page, if 0 or undefined, let the data provider decide.
-     */
-    readonly limit?: number,
-
-    /**
-     * Total number of items.
-     */
-    readonly total?: number;
-
-    /**
-     * Current item count.
-     */
-    readonly count: number;
-
-    /**
-     * Response items.
-     */
-    readonly items: T[];
-}
-
-/**
- * Implement this for plugging in your data onto a table.
- */
-export interface TableDataProvider<T> {
-    /**
-     * Row initializer, from the given data item, populate the table row.
-     */
-    readonly initializer: TableViewRowInitializer<T>;
-
-    /**
-     * Query data source.
-     */
-    query(query: DataQuery<T>): Promise<DataResponse<T>>;
-
-    /**
-     * Get column specification.
-     */
-    getColumnSpec(): DataColumnSpec<T>[];
-}
+import { DataQuery, DataResponse, SortOrder, TableDataProvider } from "./data";
+import { AbstractContainer, CellAlignment, Signal } from "./core";
 
 /**
  * ListBox row.
@@ -172,12 +31,17 @@ export class TableView<T> extends AbstractContainer<TableViewRow> {
     /**
      * This table data provider.
      */
-    private dataProvider: TableDataProvider<T>
+    private dataProvider: TableDataProvider<T>;
 
     /**
      * Current data query.
      */
-    private dataQuery?: DataQuery<T>
+    private dataQuery?: DataQuery<T>;
+
+    /**
+     * Current data query response.
+     */
+    private dataReponse?: DataResponse<T>;
 
     /**
      * @inheritdoc
@@ -188,6 +52,32 @@ export class TableView<T> extends AbstractContainer<TableViewRow> {
         this.dataQuery = query;
     }
 
+    /**
+     * Allow users to fetch current query from signals.
+     */
+    getCurrentQuery(): DataQuery<T> {
+        return this.dataQuery ?? {};
+    }
+
+    /**
+     * Allow users to fetch current query response from signals.
+     *
+     * Warning here: the returned response will not have the items[] array
+     * initialized, in order to avoid polluting memory with the response
+     * data.
+     */
+    getCurrentResponse(): DataResponse<T> {
+        return this.dataReponse ?? {
+            count: 0,
+            items: [],
+        };
+    }
+
+    /**
+     * Refresh table data. You can pass a new query here.
+     *
+     * If query is incomplete, it will be completed using previous query.
+     */
     refresh(query?: DataQuery<T>): void {
         if (query) {
             this.dataQuery = query;
@@ -197,13 +87,48 @@ export class TableView<T> extends AbstractContainer<TableViewRow> {
             if (!this.dataQuery) {
                 this.dataQuery = {};
             }
+            this.dataReponse = {
+                page: response.page,
+                limit: response.limit,
+                total: response.total,
+                count: response.count,
+                sortColumn: response.sortColumn,
+                sortOrder: response.sortOrder,
+                items: [],
+            };
             for (const item of response.items) {
                 const row = new TableViewRow();
                 this.dataProvider.initializer(row, item);
                 this.addChild(row);
             }
             this.repaint();
+            this.dispatch(Signal.TableDataRefreshed);
         });
+    }
+
+    /**
+     * Create a new query by merging with existing one.
+     */
+    protected createQueryMerge(partialQuery: DataQuery<T>): DataQuery<T> {
+        if (!this.dataQuery) {
+            return partialQuery;
+        } else {
+            return {
+                page: partialQuery.page ?? this.dataQuery.page,
+                limit: partialQuery.limit ?? this.dataQuery.limit,
+                sortColumn: partialQuery.sortColumn ?? this.dataQuery.sortColumn,
+                sortOrder: partialQuery.sortOrder ?? this.dataQuery.sortOrder,
+                query: partialQuery.query ?? this.dataQuery.query,
+            };
+        }
+    }
+
+    /**
+     * Update query, then run refresh.
+     */
+    protected updateQueryAndRefresh(partialQuery: DataQuery<T>) {
+        this.refresh(this.createQueryMerge(partialQuery));
+        this.dispatch(Signal.TableColumnSorted);
     }
 
     /**
@@ -211,20 +136,67 @@ export class TableView<T> extends AbstractContainer<TableViewRow> {
      */
     createElement() {
         const element = this.createContainer("fg-tableview", "table");
+
         const header = this.doCreateElement("thead");
         const headerRow = this.doCreateElement("tr");
         for (const columnSpec of this.dataProvider.getColumnSpec()) {
             const headerCell = this.doCreateElement("th");
-            headerCell.innerText = columnSpec.label ?? columnSpec.field;
+
+            if (columnSpec.sortable) {
+                const sortButton = this.doCreateElement("a");
+                sortButton.setAttribute("href", "#");
+                let currentSort = (this.dataReponse?.sortOrder ?? this.dataQuery?.sortOrder) === SortOrder.Desc ? SortOrder.Desc : SortOrder.Asc;
+                sortButton.innerText = columnSpec.label ?? columnSpec.field;
+
+                // Apply default sort class for theming on the button.
+                switch (currentSort) {
+                    case SortOrder.Asc:
+                        sortButton.classList.add("fg-sort-asc");
+                        sortButton.classList.remove("fg-sort-desc");
+                        break;
+                    case SortOrder.Desc:
+                        sortButton.classList.add("fg-sort-desc");
+                        sortButton.classList.remove("fg-sort-asc");
+                        break;
+                }
+
+                // Onclick behavior.
+                sortButton.addEventListener("click", (event) => {
+                    event.preventDefault();
+
+                    currentSort = currentSort === SortOrder.Desc ? SortOrder.Asc : SortOrder.Desc;
+                    this.updateQueryAndRefresh({
+                        sortColumn: columnSpec.field,
+                        sortOrder: currentSort ,
+                    });
+
+                    switch (currentSort) {
+                        case SortOrder.Asc:
+                            sortButton.classList.add("fg-sort-asc");
+                            sortButton.classList.remove("fg-sort-desc");
+                            break;
+                        case SortOrder.Desc:
+                            sortButton.classList.add("fg-sort-desc");
+                            sortButton.classList.remove("fg-sort-asc");
+                            break;
+                    }
+                });
+
+                headerCell.appendChild(sortButton);
+            } else {
+                headerCell.innerText = columnSpec.label ?? columnSpec.field;
+            }
             headerRow.appendChild(headerCell);
         }
         header.appendChild(headerRow);
+
         element.appendChild(header);
         const body = this.doCreateElement("tbody");
         for (const child of this.getChildren()) {
             body.appendChild(child.item.getElement());
         }
         element.appendChild(body);
+
         return element;
     }
 }

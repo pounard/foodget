@@ -14,6 +14,8 @@ export enum Signal {
     Hidden,
     Repaint,
     Showed,
+    TableColumnSorted,
+    TableDataRefreshed,
     Unchecked,
 }
 
@@ -83,7 +85,7 @@ export enum ContainerSizing {
 /**
  * Because we need a bit more than just a Widget here.
  */
-export interface ContainerCell<T extends Widget, H = any> extends ContainerCellDisplay {
+export interface ContainerCell<T extends Widget = Widget, H = any> extends ContainerCellDisplay {
     /**
      * Widget instance.
      */
@@ -208,7 +210,7 @@ export interface Widget extends SignalEmitter {
  * Usually containers do not provide user interaction other than showing or
  * hiding sub-elements on demand.
  */
-export interface Container<T extends Widget, H = any> extends Widget {
+export interface Container<T extends Widget = Widget, H = any> extends Widget {
     /**
      * Set container sizing behaviour.
      */
@@ -434,6 +436,7 @@ export abstract class AbstractWidget implements Widget {
      */
     setLabel(label: string) {
         this.label = label;
+        this.markHasChanged();
     }
 
     /**
@@ -493,6 +496,7 @@ export abstract class AbstractWidget implements Widget {
     activate() {
         this.activated = true;
         this.onActivate();
+        this.markHasChanged();
     }
 
     /**
@@ -501,6 +505,7 @@ export abstract class AbstractWidget implements Widget {
     deactivate() {
         this.activated = false;
         this.onDeactivate();
+        this.markHasChanged();
     }
 
     /**
