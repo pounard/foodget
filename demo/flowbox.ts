@@ -26,8 +26,7 @@ export function createFlowBoxDemo(app: App): void {
     window.addChild(actionBar);
     window.addChild(flowbox);
     app.addChild(window);
-
-    app.open(window);
+    app.display(window);
 }
 
 interface Color {

@@ -1,4 +1,4 @@
-import { AbstractContainer, CellAlignment, ContainerCell, Widget, WidgetPosition } from "./core";
+import { AbstractContainer, CellAlignment, Widget, AbstractContainerStack } from "./core";
 
 // @todo centerbox
 // @todo scrolled window
@@ -30,55 +30,12 @@ export class NoteBookPage extends AbstractContainer {
 /**
  * NoteBook container.
  */
-export class NoteBook extends AbstractContainer<NoteBookPage, HTMLElement> {
+export class NoteBook extends AbstractContainerStack<NoteBookPage, HTMLElement> {
     /**
-     * Current tab being displayed, help for repaint.
+     * @inheritdoc
      */
-    private currentId: string | null = null;
-
-    /**
-     * Create new page instance and attach it as a child of this instance.
-     */
-    createPage(label?: string): NoteBookPage {
-        const page = new NoteBookPage(label);
-        this.addChild(page);
-        return page;
-    }
-
-    /**
-     * Select page.
-     */
-    displayPage(page: string | WidgetPosition | NoteBookPage): void {
-        const target = this.findChild(page);
-        if (!target) {
-            throw "Could not find target";
-        }
-        if (this.hasChanged()) {
-            this.currentId = target.item.getId();
-            this.repaint();
-        } else {
-            // Repaint will display tab.
-            this.displayTab(target);
-        }
-    }
-
-    /**
-     * Display tab.
-     */
-    protected displayTab(target: ContainerCell<NoteBookPage, HTMLElement>): void {
-        for (const candidate of this.getChildren()) {
-            if (target !== candidate) {
-                candidate.item.hide();
-                if (candidate.handle) {
-                    candidate.handle.classList.remove("active");
-                }
-            }
-        }
-        this.currentId = target.item.getId();
-        target.item.show();
-        if (target.handle) {
-            target.handle.classList.add("active");
-        }
+    createNewStackedInstance(label?: string) {
+        return new NoteBookPage(label);
     }
 
     /**
@@ -88,40 +45,30 @@ export class NoteBook extends AbstractContainer<NoteBookPage, HTMLElement> {
         const element = this.createContainer("fg-notebook");
         const navElement = this.doCreateElement("ul", "fg-notebook-nav");
         const pagesElement = this.doCreateElement("div", "fg-notebook-in");
-        let activePage = null;
 
         for (const child of this.getChildren()) {
             const page = child.item;
 
             const titleLink = this.doCreateElement("a");
-            const currentPageId = page.getId();
             titleLink.setAttribute("href", '#');
             titleLink.innerText = page.getLabel() ?? "Page";
-            titleLink.addEventListener("click", () => this.displayPage(currentPageId));
+            titleLink.addEventListener("click", () => this.display(page));
 
             const titleElement = this.doCreateElement("li", "fg-notebook-tab");
             titleElement.appendChild(titleLink);
             navElement.appendChild(titleElement);
 
-            // Affect the title element as being the cell handle.
-            child.handle = titleElement;
-
-            pagesElement.appendChild(this.createCell(child, "fg-notebook-item", null));
-
-            // Per default, always open the first, but if a selection was
-            // already recorded, restore this one instead, and avoir user
-            // confusion on repaint.
-            if (!activePage || page.getId() === this.currentId) {
-                activePage = child;
+            if (this.isDisplayedChild(child)) {
+                titleElement.classList.add("active");
+                page.show();
+                pagesElement.appendChild(this.createCell(child, "fg-notebook-item", null));
+            } else {
+                page.hide();
             }
         }
 
         element.appendChild(navElement);
         element.appendChild(pagesElement);
-
-        if (activePage) {
-            this.displayTab(activePage);
-        }
 
         return element;
     }

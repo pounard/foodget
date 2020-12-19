@@ -39,7 +39,7 @@ export class TextEntry extends AbstractWidget {
         element.value = this.value;
         element.addEventListener("change", () => {
             this.value = element.value ?? '';
-            this.dispatch(Signal.Changed);
+            this.dispatch(Signal.EntryChanged);
         });
         return element;
     }
@@ -70,7 +70,7 @@ export class MultilineTextEntry extends AbstractWidget {
         element.value = this.value;
         element.addEventListener("change", () => {
             this.value = element.value ?? '';
-            this.dispatch(Signal.Changed);
+            this.dispatch(Signal.EntryChanged);
         });
         return element;
     }
@@ -113,9 +113,9 @@ export class CheckBox extends AbstractWidget {
             this.dispatch(Signal.Clicked);
             this.checked = inputElement.checked;
             if (inputElement.checked) {
-                this.dispatch(Signal.Checked);
+                this.dispatch(Signal.EntryChecked);
             } else {
-                this.dispatch(Signal.Unchecked);
+                this.dispatch(Signal.EntryUnchecked);
             }
         });
 

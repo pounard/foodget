@@ -104,11 +104,9 @@ export function createTableViewDemo(app: App): void {
         const currentPage = response.page ?? 1;
         const totalPageCount = Math.ceil((response.total ?? 1) / (response.limit ?? response.count));
         actionBarLabel.setLabel(`This TableView displays ${response.count} / ${response.total ?? response.count} items, in page ${currentPage} / ${totalPageCount}`);
-        actionBarLabel.repaint();
     });
     table.refresh();
-
-    app.open(window);
+    app.display(window);
 }
 
 function colorImage(hexcode: string, width: number, height: number): string {

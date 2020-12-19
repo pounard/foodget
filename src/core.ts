@@ -1,26 +1,82 @@
 /**
- * Handler interface.
+ * Handler interface for signal emitters.
  */
 export type Handler<T> = (source: T) => void;
+
+/**
+ * Type alias for user CSS class list.
+ */
+export type Classes = null | string | string[];
+
+/*
+ * Sad and depressing, but working.
+ */
+let ID_COUNT = 0;
 
 /**
  * All signals, some might not be in use on your widgets.
  */
 export enum Signal {
-    Changed,
-    Checked,
+    /**
+     * For input elements, value has changed.
+     */
+    EntryChanged,
+
+    /**
+     * For checkbox input elements, checkbox was checked.
+     */
+    EntryChecked,
+
+    /**
+     * For checkbox input elements, checkbox was unchecked.
+     */
+    EntryUnchecked,
+
+    /**
+     * For all clickable elements, element was clicked.
+     */
     Clicked,
+
+    /**
+     * Widget was disposed.
+     */
     Disposed,
+
+    /**
+     * Widget was hidden.
+     */
     Hidden,
+
+    /**
+     * Widget was repaint.
+     */
     Repaint,
+
+    /**
+     * Widget was displayed.
+     */
     Showed,
+
+    /**
+     * Stacked container in a container stack is being displayed.
+     */
+    StackDisplayed,
+
+    /**
+     * Table was sorted using a dedicated column.
+     * This signal is called before repaint;
+     */
     TableColumnSorted,
+
+    /**
+     * Table data was refreshed using the data provider.
+     * This signal is called before repaint;
+     */
     TableDataRefreshed,
-    Unchecked,
 }
 
 /**
- * Basic interface.
+ * Emit signals.
  */
 export interface SignalEmitter {
     /**
@@ -43,8 +99,19 @@ export type WidgetPosition = number;
  * Alignement constants for when necessary.
  */
 export enum CellAlignment {
+    /**
+     * Align cell to the left in container.
+     */
     Left,
+
+    /**
+     * Align cell at the center in container.
+     */
     Center,
+
+    /**
+     * Align cell to the right in container.
+     */
     Right,
 }
 
@@ -52,15 +119,31 @@ export enum CellAlignment {
  * Cell sizing.
  */
 export enum CellSizing {
+    /**
+     * Expand cell to maximum width within container free space.
+     */
     Expand,
+
+    /**
+     * Shrink cell to minimun width to fit its contents.
+     */
     Shrink,
 }
 
 /**
  * Shortcut for a few methods.
+ *
+ * @todo Get rid of this interface?
  */
 export interface ContainerCellDisplay {
+    /**
+     * Cell alignment.
+     */
     alignment: CellAlignment,
+
+    /**
+     * Cell sizing.
+     */
     sizing: CellSizing,
 }
 
@@ -101,16 +184,6 @@ export interface ContainerCell<T extends Widget = Widget, H = any> extends Conta
      */
     handle?: H,
 }
-
-/**
- * Type alias for user CSS class list.
- */
-export type Classes = null | string | string[];
-
-/*
- * Sad and depressing, but working.
- */
-let ID_COUNT = 0;
 
 /**
  * Base widget interface.
@@ -256,6 +329,26 @@ export interface Container<T extends Widget = Widget, H = any> extends Widget {
 }
 
 /**
+ * A ContainerStack is a container that allows only one of its children to be
+ * displayed at a time. App and NoteBook are both the most comprehensive
+ * exemples.
+ *
+ * Container stack will use the ContainerCell.handle property to attach
+ * triggering elements that displays its childs.
+ */
+export interface ContainerStack<T extends Container, H = any> extends Container<T, H> {
+    /**
+     * Create and stack new child container.
+     */
+    stack(label?: string): T;
+
+    /**
+     * Display stacked child container and hide others..
+     */
+    display(stacked: string | WidgetPosition | T): void;
+}
+
+/**
  * Abstract widget class.
  *
  * Whereas it is possible to fully implement the Widget interface by yourself
@@ -288,11 +381,6 @@ export abstract class AbstractWidget implements Widget {
     private element: HTMLElement | null = null;
 
     /**
-     * At init, style "display" value is copied here. 
-     */
-    private elementDisplayValue: string = "";
-
-    /**
      * All connected handlers.
      */
     private connectedHandlers = new Map<Signal, Handler<this>[]>();
@@ -306,9 +394,7 @@ export abstract class AbstractWidget implements Widget {
      * Default constructor.
      */
     constructor(label?: string) {
-        if (label) {
-            this.setLabel(label);
-        }
+        this.label = label ?? null;
         this.configure();
     }
 
@@ -368,25 +454,10 @@ export abstract class AbstractWidget implements Widget {
     /**
      * Notify this widget structure has changed.
      */
-    protected markHasChanged(): void {
+    protected markAsChanged(): void {
         this.changed = true;
-    }
-
-    /**
-     * Implementation of show().
-     */
-    protected doShow() {
-        if (this.element) {
-            this.element.style.display = this.elementDisplayValue;
-        }
-    }
-
-    /**
-     * Implementation of hide().
-     */
-    protected doHide() {
-        if (this.element) {
-            this.element.style.display = "none";
+        if (this.element && this.displayed) {
+            this.repaint();
         }
     }
 
@@ -436,7 +507,7 @@ export abstract class AbstractWidget implements Widget {
      */
     setLabel(label: string) {
         this.label = label;
-        this.markHasChanged();
+        this.markAsChanged();
     }
 
     /**
@@ -465,7 +536,7 @@ export abstract class AbstractWidget implements Widget {
      */
     show() {
         this.displayed = true;
-        this.doShow();
+        this.markAsChanged();
     }
 
     /**
@@ -473,7 +544,7 @@ export abstract class AbstractWidget implements Widget {
      */
     hide() {
         this.displayed = false;
-        this.doHide();
+        this.markAsChanged();
     }
 
     /**
@@ -496,7 +567,7 @@ export abstract class AbstractWidget implements Widget {
     activate() {
         this.activated = true;
         this.onActivate();
-        this.markHasChanged();
+        this.markAsChanged();
     }
 
     /**
@@ -505,13 +576,14 @@ export abstract class AbstractWidget implements Widget {
     deactivate() {
         this.activated = false;
         this.onDeactivate();
-        this.markHasChanged();
+        this.markAsChanged();
     }
 
     /**
      * @inheritdoc
      */
     dispose() {
+        this.changed = false;
         if (this.element) {
             this.element.remove();
         }
@@ -525,14 +597,13 @@ export abstract class AbstractWidget implements Widget {
     getElement() {
         if (!this.element || this.changed) {
             this.element = this.createElement();
-            this.elementDisplayValue = this.element.style.display;
             this.changed = false;
         }
 
         if (this.displayed) {
-            this.doShow();
+            this.element.style.display = "";
         } else {
-            this.doHide();
+            this.element.style.display = "none";
         }
 
         return this.element;
@@ -543,6 +614,11 @@ export abstract class AbstractWidget implements Widget {
      */
     repaint() {
         if (this.changed) {
+            // Backup previous element first, then remove its reference from
+            // the current instance to force repaint. Previous elmeent will
+            // be really replaced in DOM only once the new element will be
+            // fully renderered outside of the DOM, avoiding empty content
+            // flashes that could happen.
             const previousElement = this.element;
             this.element = null;
             this.element = this.getElement();
@@ -632,6 +708,7 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     protected createContainer(className?: Classes, tagName: string = "div"): HTMLElement {
         const element = document.createElement(tagName);
         this.doApplyClasses(element, className);
+        this.applyContainerSizing(element, this.containerSizing);
         element.setAttribute("id", this.getId());
         return element;
     }
@@ -747,9 +824,11 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     }
 
     /**
-     * @inheritdoc
+     * Use this when you need to build a complex widget to delay repaint
+     * at the end of your procedure. If you use this, you will need to
+     * run markAsChanged() manually.
      */
-    addChild(child: T, sizing?: CellSizing, alignment?: CellAlignment, position?: WidgetPosition): void {
+    protected addChildWithoutRepaint(child: T, sizing?: CellSizing, alignment?: CellAlignment, position?: WidgetPosition): void {
         if (position) {
             throw "addChild() with explicit position is not implemented yet.";
         }
@@ -760,8 +839,14 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
             position: this.children.length as WidgetPosition,
             sizing: sizing ?? CellSizing.Shrink
         });
+    }
 
-        this.markHasChanged();
+    /**
+     * @inheritdoc
+     */
+    addChild(child: T, sizing?: CellSizing, alignment?: CellAlignment, position?: WidgetPosition): void {
+        this.addChildWithoutRepaint(child, sizing, alignment, position);
+        this.markAsChanged();
     }
 
     /**
@@ -773,22 +858,20 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
             target.item.dispose();
             this.children.splice(target.position, 1);
             this.recomputeChildrenPositions();
-            this.repaint();
+            this.markAsChanged();
         }
     }
 
     /**
      * Remove all children of this container.
      */
-    protected removeAllChildren(repaint: boolean = true): void {
+    protected removeAllChildren(): void {
         const children = this.children;
         this.children = [];
         for (const child of children) {
             child.item.dispose();
         }
-        if (repaint) {
-            this.repaint();
-        }
+        this.markAsChanged();
     }
 
     /**
@@ -842,11 +925,89 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
      * @inheritdoc
      */
     repaint() {
+        // Even if we did not changed, attempt repaint upon children, those
+        // who have changed will recursively be repainted.
         for (const child of this.children) {
-            if (child.item.hasChanged()) {
-                child.item.repaint();
-            }
+            // When we repaint a container, children getElement() method will
+            // return the same element until the element changes, this means
+            // that we actually do not rebuild the whole structure, we only
+            // rebuild what's really changed.
+            child.item.repaint();
         }
         super.repaint();
+    }
+}
+
+/**
+ * Base implementation for container stack.
+ *
+ * Per default, is not element is displayed, then first will be.
+ *
+ * Implements must correctly refresh their trigger active/inactive state during
+ * the repaint, the display() method will only show()/hide() children and mark
+ * the current container has changed for later repaint() call.
+ *
+ * Do never call the display() method during repaint or you'll experience an
+ * inifinite loop.
+ */
+export abstract class AbstractContainerStack<T extends Container, H = any> extends AbstractContainer<T> implements ContainerStack<T> {
+    /**
+     * Current tab being displayed, help for repaint.
+     */
+    private currentId: string | null = null;
+
+    /**
+     * Is this child the one being displayed.
+     */
+    protected isDisplayedChild(child: ContainerCell<T, H>): boolean {
+        return this.currentId === child.item.getId();
+    }
+
+    /**
+     * Create new stacked container instance.
+     */
+    protected abstract createNewStackedInstance(label?: string): T;
+
+    /**
+     * Create and stack new child container.
+     */
+    stack(label?: string): T {
+        const stacked = this.createNewStackedInstance(label);
+        if (!this.currentId) {
+            this.currentId = stacked.getId();
+            stacked.show();
+        } else {
+            stacked.hide();
+        }
+        this.addChild(stacked);
+        return stacked;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    display(stacked: string | WidgetPosition | T): void {
+        const target = this.findChild(stacked);
+
+        if (!target) {
+            throw "Could not find stacked container to display.";
+        }
+
+        if (this.isDisplayedChild(target)) {
+            // Do nothing if the current target item is already the one
+            // being displayed, avoid unnecessary repaint calls.
+            return;
+        }
+
+        this.currentId = target.item.getId();
+
+        for (const candidate of this.getChildren()) {
+            if (target !== candidate) {
+                candidate.item.hide();
+            }
+        }
+        target.item.show();
+
+        this.markAsChanged();
     }
 }

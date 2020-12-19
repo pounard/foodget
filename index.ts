@@ -65,7 +65,7 @@ worried glance your eyes`
 ];
 
 function createAddPageForm(app: App, noteBook: NoteBook): void {
-    const window = app.createWindow("Add new page");
+    const window = app.stack("Add new page");
 
     const name = new TextEntry();
     window.addChild(new Label("Please input name"));
@@ -80,7 +80,7 @@ function createAddPageForm(app: App, noteBook: NoteBook): void {
 
     const createButton = new Button("Create");
     createButton.connect(Signal.Clicked, () => {
-        const page = noteBook.createPage(name.getValue());
+        const page = noteBook.stack(name.getValue());
 
         const pageContent = contents.getValue().trim();
         if (pageContent) {
@@ -91,7 +91,7 @@ function createAddPageForm(app: App, noteBook: NoteBook): void {
             page.addChild(text);
         }
 
-        noteBook.displayPage(page.getId());
+        noteBook.display(page.getId());
         app.disposeCurrent();
     });
 
@@ -100,13 +100,13 @@ function createAddPageForm(app: App, noteBook: NoteBook): void {
     actionBar.addChild(createButton);
 
     window.addChild(actionBar);
-    app.open(window);
+    app.display(window);
 }
 
 const element = document.querySelector("#app") as HTMLElement|null;
 if (element) {
     const app = new App();
-    const mainWindow = app.createWindow("Welcome in my first app !");
+    const mainWindow = app.stack("Welcome in my first app !");
     const sidebar = mainWindow.createSidebar();
 
     sidebar.addChild(new Label("This is a SideBar!"));
@@ -135,7 +135,7 @@ if (element) {
 
     const listBoxWindow = initListBoxDemo(app);
     const listBoxOpenButton = new Button("ListBox");
-    listBoxOpenButton.connect(Signal.Clicked, () => app.open(listBoxWindow.getId()));
+    listBoxOpenButton.connect(Signal.Clicked, () => app.display(listBoxWindow.getId()));
     actionBar.addChild(listBoxOpenButton);
 
     const tableViewOpenButton = new Button("TableView");
@@ -145,7 +145,7 @@ if (element) {
     const noteBook = new NoteBook();
     mainWindow.addChild(noteBook);
 
-    const page1 = noteBook.createPage("Introduction");
+    const page1 = noteBook.stack("Introduction");
     const introText = new MultilineText();
     introText.setText(INTRO_TEXT);
     page1.addChild(introText);

@@ -16,8 +16,8 @@ body {
     position: relative;
 }
 .fg-app > .fg-window {
-    height: 100vh;
-    overflow-y: scroll;
+    min-height: 100vh;
+    /* overflow-y: scroll; */
 }
 
 .fg-window {
@@ -149,10 +149,11 @@ body {
 }
 
 .fg-c-e {
-    /* if column, then flex: auto */
+    /* flex: auto; */
 }
 .fg-c-s {
-    /* if column, then flex: initial, fixed height to view port, overflow: scroll */
+    /* flex: initial; */
+    /* overflow: scroll; */
 }
 
 /*

@@ -93,6 +93,9 @@ export class MultilineText extends AbstractWidget {
     }
 }
 
+/**
+ * Image.
+ */
 export class Image extends AbstractWidget {
     private uri: string | null = null;
 

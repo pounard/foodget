@@ -164,6 +164,8 @@ will function properly but theming and display might be broken in such cases.
  - [x] flow box, list box
  - [x] data query, provider interfaces and basics,
  - [x] table view, using data query and provider,
+ - [x] for repaint to be implicit on change,
+ - [x] do not call getElement() or repaint() when child is not showed,
  - [ ] sidebar (pending),
  - [ ] explode Widget and Container interfaces in more semantic types,
  - [ ] implement everything needed for building forms,
@@ -174,6 +176,7 @@ will function properly but theming and display might be broken in such cases.
  - [ ] selections,
  - [ ] shortcuts and accelerators,
  - [ ] accessibility!
+ - [ ] implement a better repaint() based on changed object graph,
  - [ ] unit test it (single thing I think I can't do in (Type|Java)Script,
  - [ ] investigate chaining method calls on widgets to avoid temp vars,
  - [ ] make theming easier,

@@ -82,7 +82,7 @@ export class TableView<T> extends AbstractContainer<TableViewRow> {
         if (query) {
             this.dataQuery = query;
         }
-        this.removeAllChildren(false);
+        this.removeAllChildren();
         this.dataProvider.query(this.dataQuery ?? {}).then(response => {
             if (!this.dataQuery) {
                 this.dataQuery = {};
@@ -96,12 +96,15 @@ export class TableView<T> extends AbstractContainer<TableViewRow> {
                 sortOrder: response.sortOrder,
                 items: [],
             };
-            for (const item of response.items) {
-                const row = new TableViewRow();
-                this.dataProvider.initializer(row, item);
-                this.addChild(row);
+            try {
+                for (const item of response.items) {
+                    const row = new TableViewRow();
+                    this.dataProvider.initializer(row, item);
+                    this.addChildWithoutRepaint(row);
+                }
+            } finally {
+                this.markAsChanged();
             }
-            this.repaint();
             this.dispatch(Signal.TableDataRefreshed);
         });
     }
