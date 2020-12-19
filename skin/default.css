@@ -1,15 +1,37 @@
-body {
-    background: #d5d3d3;
-}
-
 /*
- * For testing
+ * Those need to be removed.
  */
 
+body {
+    /* We are never supposed to see this. */
+    background: yellow;
+}
 body {
     padding: 0 !important;
     margin: 0 !important;
 }
+
+/*
+ * Global theming.
+ */
+
+.fg-app * {
+    font-family: "Sans Regular", Arial, Helvetica;
+    font-size: 16px;
+}
+
+/*
+ * Global window coloring.
+ */
+
+.fg-app {
+    background: #f6f5f4;
+}
+
+/*
+ * Default layout, container and widget positionning.
+ */
+
 .fg-app {
     margin: 0 !important;
     min-height: 100vh;
@@ -69,6 +91,10 @@ body {
     flex: initial;
 }
 
+.fg-entry-text-multi {
+    flex: auto;
+}
+
 /*
  * App and defaults.
  */
@@ -89,8 +115,6 @@ body {
 }
 .fg-app * {
     box-sizing: border-box;
-    font-family: "Sans Regular", Arial, Helvetica;
-    font-size: 16px;
 }
 
 .fg-window-label {
@@ -174,10 +198,6 @@ body {
     margin: 0.5rem 1rem;
 }
 
-.fg-entry-text-multi {
-    flex: auto;
-}
-
 /*
  * Page.
  */
@@ -187,21 +207,8 @@ body {
     border-radius: 0.3rem;
 }
 
-.fg-page-label {
-    padding: 0.5rem 1rem;
-    display: flex;
-    border-bottom: 1px solid #ccc;
-}
-.fg-page-label * {
-    flex: initial; /* If controls were drawn, we prefere them short. */
-}
-.fg-page-label h1 {
-    flex: auto; /* Title will expand to fit. */
-    text-align: center;
-}
-
 /*
- * Button
+ * Buttons
  */
 
 .fg-button {
@@ -353,12 +360,4 @@ body {
     padding: 0.5rem 1rem;
     border: 1px solid #ccc;
     border-radius: 0.3rem;
-}
-
-/*
- * MenuBar, Menu, MenuItem
- */
-
-.fg-menu-bar {
-    padding: 0.5rem 1rem;
 }

@@ -155,22 +155,24 @@ will function properly but theming and display might be broken in such cases.
 
 # Roadmap
 
- - [x] implement widget basics,
- - [x] implement container basics,
+ - [x] implement Widget basics,
+ - [x] implement Container basics,
  - [x] page switching, browsing basics,
  - [x] implement a much more robust signal API,
  - [x] make rendering more robust,
  - [x] lazyly render hidden items,
- - [x] flow box, list box
+ - [x] FlowBox, ListBox
  - [x] data query, provider interfaces and basics,
- - [x] table view, using data query and provider,
+ - [x] TableView, using data query and provider,
  - [x] for repaint to be implicit on change,
  - [x] do not call getElement() or repaint() when child is not showed,
- - [ ] sidebar (pending),
+ - [x] SideBar basics,
+ - [ ] SideBar based ContainerStack,
+ - [ ] SideBar responsive display and buttons,
  - [ ] explode Widget and Container interfaces in more semantic types,
  - [ ] implement everything needed for building forms,
- - [ ] pager widget for data queries,
- - [ ] tree view using table view,
+ - [ ] DataPager widget for data queries,
+ - [ ] TreeView using table view,
  - [ ] viewport size constraint and scrolled windows (pending),
  - [ ] ensure that repaint is always automatically called when necessary,
  - [ ] selections,
