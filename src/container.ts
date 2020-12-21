@@ -75,6 +75,47 @@ export class NoteBook extends AbstractContainerStack<NoteBookPage, HTMLElement> 
 }
 
 /**
+ * NoteBookPage widget, for NoteBook container.
+ */
+export class HorizontalPaneItem extends AbstractContainer {
+    /**
+     * @inheritdoc
+     */
+    createElement() {
+        const element = this.createContainer("fg-pane-pane", "section");
+        for (const child of this.getChildren()) {
+            element.appendChild(this.createCell(child, "fg-pane-item"));
+        }
+        return element;
+    }
+}
+
+/**
+ * Horizontal pane container.
+ */
+export class HorizontalPane extends AbstractContainer<HorizontalPaneItem> {
+    /**
+     * Create and stack new child container.
+     */
+    stack(label?: string): HorizontalPaneItem {
+        const stacked = new HorizontalPaneItem(label);
+        this.addChild(stacked);
+        return stacked;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    createElement() {
+        const element = this.createContainer("fg-hpane");
+        for (const child of this.getChildren()) {
+            element.appendChild(this.createCell(child, null, null));
+        }
+        return element;
+    }
+}
+
+/**
  * ActionBar is wide, displays inline, and aligns items at the right.
  */
 export class ActionBar extends AbstractContainer {

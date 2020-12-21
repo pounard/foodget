@@ -341,6 +341,31 @@ body {
 }
 
 /*
+ * HorizontalPane, VerticalPane.
+ */
+
+.fg-hpane {
+    display: flex;
+    padding: 0;
+    flex-direction: row;
+}
+.fg-vpane {
+	display: flex;
+    padding: 0;
+    flex-direction: column;
+}
+.fg-pane-pane {
+    flex: auto;
+    padding: 0.5rem 1rem;
+}
+.fg-hpane > .fg-pane-pane:not(:first-child) {
+    border-left: 1px solid #ccc;
+}
+.fg-vpane > .fg-pane-pane:not(:first-child) {
+    border-top: 1px solid #ccc;
+}
+
+/*
  * HorizontalBoxes, VerticalBoxes.
  */
 

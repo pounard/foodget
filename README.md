@@ -169,6 +169,7 @@ will function properly but theming and display might be broken in such cases.
  - [x] SideBar basics,
  - [ ] SideBar based ContainerStack,
  - [ ] SideBar responsive display and buttons,
+ - [ ] Container in Container should not reserve padding,
  - [ ] explode Widget and Container interfaces in more semantic types,
  - [ ] implement everything needed for building forms,
  - [ ] DataPager widget for data queries,
