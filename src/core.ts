@@ -8,6 +8,11 @@ export type Handler<T> = (source: T) => void;
  */
 export type Classes = null | string | string[];
 
+/**
+ * Container initializer.
+ */
+export type ContainerInitializer<T extends Container> = (source: T) => void;
+
 /*
  * Sad and depressing, but working.
  */
@@ -285,6 +290,11 @@ export interface Widget extends SignalEmitter {
  */
 export interface Container<T extends Widget = Widget, H = any> extends Widget {
     /**
+     * Set initializer.
+     */
+    setInitializer(initializer: ContainerInitializer<this>): void;
+
+    /**
      * Set container sizing behaviour.
      */
     setContainerSizing(sizing: ContainerSizing): void;
@@ -326,6 +336,13 @@ export interface Container<T extends Widget = Widget, H = any> extends Widget {
      *   You should not use this as an API user, it is here for internal use.
      */
     getChildren(): ContainerCell<T, H>[];
+
+    /**
+     * Force this container to call once initializer, and refresh all contents.
+     *
+     * This will only call repaint() if no initializer is set.
+     */
+    refresh(): void;
 }
 
 /**
@@ -652,6 +669,16 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     private containerSizing: ContainerSizing = ContainerSizing.Scroll;
 
     /**
+     * Was this container initalized at least once?
+     */
+    private initialized: boolean = false;
+
+    /**
+     * Container initalizer.
+     */
+    private initializer?: ContainerInitializer<this>;
+
+    /**
      * Default constructor.
      */
     constructor(label?: string) {
@@ -798,6 +825,13 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     /**
      * @inheritdoc
      */
+    setInitializer(initializer: ContainerInitializer<this>): void {
+        this.initializer = initializer;
+    }
+
+    /**
+     * @inheritdoc
+     */
     setContainerSizing(sizing: ContainerSizing): void {
         this.containerSizing = sizing;
     }
@@ -865,12 +899,20 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     /**
      * Remove all children of this container.
      */
-    protected removeAllChildren(): void {
+    protected removeAllChildrenWithoutRepaint(): void {
         const children = this.children;
         this.children = [];
         for (const child of children) {
             child.item.dispose();
         }
+        this.markAsChanged();
+    }
+
+    /**
+     * Remove all children of this container.
+     */
+    protected removeAllChildren(): void {
+        this.removeAllChildrenWithoutRepaint();
         this.markAsChanged();
     }
 
@@ -924,6 +966,20 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     /**
      * @inheritdoc
      */
+    getElement() {
+        // Transparent initialization upon first paint.
+        if (!this.initialized) {
+            if (this.initializer) {
+                this.initializer(this);
+            }
+            this.initialized = true;
+        }
+        return super.getElement();
+    }
+
+    /**
+     * @inheritdoc
+     */
     repaint() {
         // Even if we did not changed, attempt repaint upon children, those
         // who have changed will recursively be repainted.
@@ -935,6 +991,17 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
             child.item.repaint();
         }
         super.repaint();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    refresh() {
+        if (this.initializer) {
+            this.removeAllChildrenWithoutRepaint();
+            this.initializer(this);
+        }
+        this.repaint();
     }
 }
 

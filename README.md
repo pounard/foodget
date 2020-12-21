@@ -166,6 +166,7 @@ will function properly but theming and display might be broken in such cases.
  - [x] TableView, using data query and provider,
  - [x] for repaint to be implicit on change,
  - [x] do not call getElement() or repaint() when child is not showed,
+ - [x] initializer() and refresh() on all containers,
  - [x] SideBar basics,
  - [ ] SideBar based ContainerStack,
  - [ ] SideBar responsive display and buttons,
