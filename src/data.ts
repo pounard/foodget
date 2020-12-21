@@ -14,7 +14,7 @@ export type ColumnName = string;
  * Filter query hashmap type definition.
  */
 export interface FilterQuery {
-    [details: string]: string;
+    [details: string]: string | string[];
 }
 
 /**
@@ -88,11 +88,6 @@ export interface DataQuery<T> {
 }
 
 /**
- * Row item initializer.
- */
-export type DataRowInitializer<T> = (row: Container, item: T) => void;
-
-/**
  * We need a response, because provider might change the query details.
  */
 export interface DataResponse<T> {
@@ -133,14 +128,9 @@ export interface DataResponse<T> {
 }
 
 /**
- * Implement this for plugging in your data onto a table.
+ * Data provider interface.
  */
-export interface TableDataProvider<T> {
-    /**
-     * Row initializer, from the given data item, populate the table row.
-     */
-    readonly initializer: DataRowInitializer<T>;
-
+export interface DataProvider<T> {
     /**
      * Query data source.
      */
@@ -150,4 +140,14 @@ export interface TableDataProvider<T> {
      * Get column specification.
      */
     getColumnSpec(): DataColumnSpec<T>[];
+}
+
+/**
+ * Implement this for plugging in your data onto a table.
+ */
+export interface TableDataProvider<T> extends DataProvider<T> {
+    /**
+     * Row initializer, from the given data item, populate the table row.
+     */
+    createRow(row: Container, item: T): void;
 }

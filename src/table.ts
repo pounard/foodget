@@ -99,7 +99,7 @@ export class TableView<T> extends AbstractContainer<TableViewRow> {
             try {
                 for (const item of response.items) {
                     const row = new TableViewRow();
-                    this.dataProvider.initializer(row, item);
+                    this.dataProvider.createRow(row, item);
                     this.addChildWithoutRepaint(row);
                 }
             } finally {
