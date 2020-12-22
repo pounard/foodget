@@ -22,6 +22,38 @@ export class Label extends AbstractWidget {
     }
 }
 
+/**
+ * Link.
+ */
+export class Link extends AbstractWidget {
+    /**
+     * Link target.
+     */
+    private href: string;
+
+    /**
+     * @inheritdoc
+     */
+    constructor(label: string, href: string) {
+        super(label);
+        this.href = href;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    createElement() {
+        const element = this.doCreateElement("a", "fg-link");
+        element.setAttribute("target", "blank");
+        element.setAttribute("href", this.href);
+        element.innerText = this.getLabel() as string;
+        return element;
+    }
+}
+
+/**
+ * Raw HTML element initializer callback.
+ */
 export type RawHtmlInitializer = (parent: HTMLElement) => void;
 
 /**

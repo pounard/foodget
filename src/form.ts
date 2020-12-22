@@ -80,7 +80,15 @@ export class MultilineTextEntry extends AbstractWidget {
  * Simple button.
  */
 export class CheckBox extends AbstractWidget {
+    /**
+     * Current state.
+     */
     private checked: boolean = false;
+
+    /**
+     * Checkbox value.
+     */
+    private value: string | null = null; 
 
     setChecked(checked: boolean = true): void {
         this.checked = checked;
@@ -88,6 +96,14 @@ export class CheckBox extends AbstractWidget {
 
     isChecked(): boolean {
         return this.checked;
+    }
+
+    setValue(value: string | null): void {
+        this.value = value;
+    }
+
+    getValue(): string | null {
+        return this.value ?? null;
     }
 
     /**
@@ -100,6 +116,9 @@ export class CheckBox extends AbstractWidget {
         if (this.checked) {
             inputElement.setAttribute("checked", "checked");
         }
+        if (this.value) {
+            inputElement.setAttribute("value", this.value);
+        }
         element.appendChild(inputElement);
 
         const label = this.getLabel();
@@ -110,8 +129,8 @@ export class CheckBox extends AbstractWidget {
         }
 
         inputElement.addEventListener("click", () => {
-            this.dispatch(Signal.Clicked);
             this.checked = inputElement.checked;
+            this.dispatch(Signal.Clicked);
             if (inputElement.checked) {
                 this.dispatch(Signal.EntryChecked);
             } else {
