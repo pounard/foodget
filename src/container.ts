@@ -15,7 +15,10 @@ export class NoteBookPage extends AbstractContainer {
      * @inheritdoc
      */
     createElement() {
-        const element = this.createContainer("fg-page", "section");
+        const element = this.createContainer("fg-notebook-page", "section");
+        if (!this.containsOnlyContainers()) {
+            element.classList.add("fg-p");
+        }
         // @todo Menu bar, if any
         // @todo Status message display, if any
         // @todo Intermediate div for content
@@ -83,6 +86,9 @@ export class HorizontalPaneItem extends AbstractContainer {
      */
     createElement() {
         const element = this.createContainer("fg-pane-pane", "section");
+        if (!this.containsOnlyContainers()) {
+            element.classList.add("fg-p");
+        }
         for (const child of this.getChildren()) {
             element.appendChild(this.createCell(child, "fg-pane-item"));
         }
@@ -130,9 +136,12 @@ export class ActionBar extends AbstractContainer {
      * @inheritdoc
      */
     createElement() {
-        const element = this.createAlignedContainer("fg-actionbar");
+        const element = this.createContainer("fg-actionbar");
+        if (!this.containsOnlyContainers()) {
+            element.classList.add("fg-p");
+        }
         for (const child of this.getChildren()) {
-            element.appendChild(this.createAlignedCell(child));
+            element.appendChild(this.createCell(child));
         }
         return element;
     }
@@ -153,9 +162,12 @@ export class StatusBar extends AbstractContainer {
      * @inheritdoc
      */
     createElement() {
-        const element = this.createAlignedContainer("fg-statusbar");
+        const element = this.createContainer("fg-statusbar");
+        if (!this.containsOnlyContainers()) {
+            element.classList.add("fg-p");
+        }
         for (const child of this.getChildren()) {
-            element.appendChild(this.createAlignedCell(child));
+            element.appendChild(this.createCell(child));
         }
         return element;
     }
@@ -169,9 +181,12 @@ export class Box<T extends Widget> extends AbstractContainer<T> {
      * @inheritdoc
      */
     createElement() {
-        const element = this.createAlignedContainer("fg-box");
+        const element = this.createContainer("fg-box");
+        if (!this.containsOnlyContainers()) {
+            element.classList.add("fg-p");
+        }
         for (const child of this.getChildren()) {
-            element.appendChild(this.createAlignedCell(child, "fg-box-item"));
+            element.appendChild(this.createCell(child, "fg-box-item"));
         }
         return element;
     }
@@ -199,9 +214,9 @@ export class HorizontalBox extends AbstractBoxContainer {
      * @inheritdoc
      */
     createElement() {
-        const element = this.createAlignedContainer("fg-hbox");
+        const element = this.createContainer("fg-hbox");
         for (const child of this.getChildren()) {
-            element.appendChild(this.createAlignedCell(child, "fg-hbox-item"));
+            element.appendChild(this.createCell(child, "fg-hbox-item"));
         }
         return element;
     }
@@ -215,9 +230,9 @@ export class VerticalBox extends AbstractBoxContainer {
      * @inheritdoc
      */
     createElement() {
-        const element = this.createAlignedContainer("fg-vbox");
+        const element = this.createContainer("fg-vbox");
         for (const child of this.getChildren()) {
-            element.appendChild(this.createAlignedCell(child, "fg-vbox-item"));
+            element.appendChild(this.createCell(child, "fg-vbox-item"));
         }
         return element;
     }

@@ -203,6 +203,11 @@ export interface Widget extends SignalEmitter {
     getId(): string;
 
     /**
+     * Is this a container.
+     */
+    isContainer(): boolean;
+
+    /**
      * Set humain readable label.
      */
     setLabel(label: string): void;
@@ -313,6 +318,11 @@ export interface Container<T extends Widget = Widget, H = any> extends Widget {
      * Get container cell alignment.
      */
     getCellAlignment(): CellAlignment;
+
+    /**
+     * Does this container contains only containers.
+     */
+    containsOnlyContainers(): boolean;
 
     /**
      * Add child.
@@ -515,6 +525,13 @@ export abstract class AbstractWidget implements Widget {
     /**
      * @inheritdoc
      */
+    isContainer() {
+        return false;
+    }
+
+    /**
+     * @inheritdoc
+     */
     hasChanged(): boolean {
         return this.changed;
     }
@@ -659,6 +676,11 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     private children: ContainerCell<T, H>[] = [];
 
     /**
+     * All children are containers.
+     */
+    private containersOnly: boolean = true;
+
+    /**
      * Container cell alignment.
      */
     private cellAlignment: CellAlignment = CellAlignment.Left;
@@ -718,13 +740,24 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     /**
      * Apply container sizing on the given HTML  element.
      */
-    protected applyContainerSizing(element: HTMLElement, sizing: ContainerSizing): void {
+    protected applyContainerSizing(element: HTMLElement, sizing: ContainerSizing, alignment: CellAlignment): void {
         switch (sizing) {
             case ContainerSizing.Expand:
                 element.classList.add('fg-c-e');
                 break;
             case ContainerSizing.Scroll:
                 element.classList.add('fg-c-s');
+                break;
+        }
+        switch (this.cellAlignment) {
+            case CellAlignment.Left:
+                element.classList.add('fg-c-l');
+                break;
+            case CellAlignment.Center:
+                element.classList.add('fg-c-c');
+                break;
+            case CellAlignment.Right:
+                element.classList.add('fg-c-r');
                 break;
         }
     }
@@ -735,7 +768,7 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     protected createContainer(className?: Classes, tagName: string = "div"): HTMLElement {
         const element = document.createElement(tagName);
         this.doApplyClasses(element, className);
-        this.applyContainerSizing(element, this.containerSizing);
+        this.applyContainerSizing(element, this.containerSizing, this.cellAlignment);
         element.setAttribute("id", this.getId());
         return element;
     }
@@ -764,62 +797,23 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     }
 
     /**
-     * Use this instead of document.createElement().
-     */
-    protected createAlignedContainer(className?: Classes, tagName: string = "div"): HTMLElement {
-        const element = this.createContainer(className, tagName);
-        element.classList.add('fg-c');
-        switch (this.cellAlignment) {
-            case CellAlignment.Left:
-                element.classList.add('fg-c-l');
-                break;
-            case CellAlignment.Center:
-                element.classList.add('fg-c-c');
-                break;
-            case CellAlignment.Right:
-                element.classList.add('fg-c-r');
-                break;
-        }
-        return element;
-    }
-
-    /**
-     * Use this instead of document.createElement().
-     */
-    protected createAlignedElement(className?: Classes, tagName: string = "div"): HTMLElement {
-        const element = this.doCreateElement(tagName, className);
-        element.classList.add('fg-c');
-        switch (this.cellAlignment) {
-            case CellAlignment.Left:
-                element.classList.add('fg-c-l');
-                break;
-            case CellAlignment.Center:
-                element.classList.add('fg-c-c');
-                break;
-            case CellAlignment.Right:
-                element.classList.add('fg-c-r');
-                break;
-        }
-        return element;
-    }
-
-    /**
-     * Use this instead of document.createElement().
-     */
-    protected createAlignedCell(child: ContainerCell<T>, className?: Classes, tagName: string | null = "div"): HTMLElement {
-        const element = this.createCell(child, className, tagName);
-        element.classList.add('fg-w');
-        return element;
-    }
-
-    /**
      * When you bring modifications to the array, you need to recompute each
      * item position.
      */
     protected recomputeChildrenPositions(): void {
+        this.containersOnly = true;
         for (let i = 0; i < this.children.length; ++i) {
-            this.children[i].position = i as WidgetPosition;
+            const child = this.children[i];
+            child.position = i as WidgetPosition;
+            this.containersOnly = this.containersOnly && child.item.isContainer();
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    isContainer() {
+        return true;
     }
 
     /**
@@ -858,6 +852,27 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
     }
 
     /**
+     * @inheritdoc
+     */
+    containsOnlyContainers() {
+        return this.children.length > 0 && this.containersOnly;
+    }
+
+    /**
+     * Get default child sizing mode.
+     */
+    protected defaultChildSizing(): CellSizing {
+        return CellSizing.Shrink;
+    }
+
+    /**
+     * Get default child alignment mode.
+     */
+    protected defaultChildAlignment(): CellAlignment {
+        return CellAlignment.Left;
+    }
+
+    /**
      * Use this when you need to build a complex widget to delay repaint
      * at the end of your procedure. If you use this, you will need to
      * run markAsChanged() manually.
@@ -867,11 +882,13 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
             throw "addChild() with explicit position is not implemented yet.";
         }
 
+        this.containersOnly = this.containersOnly && child.isContainer();
+
         this.children.push({
-            alignment: alignment ?? CellAlignment.Left,
+            alignment: alignment ?? this.defaultChildAlignment(),
             item: child,
             position: this.children.length as WidgetPosition,
-            sizing: sizing ?? CellSizing.Shrink
+            sizing: sizing ?? this.defaultChildSizing(),
         });
     }
 
@@ -913,6 +930,7 @@ export abstract class AbstractContainer<T extends Widget = Widget, H = any> exte
      */
     protected removeAllChildren(): void {
         this.removeAllChildrenWithoutRepaint();
+        this.containersOnly = true;
         this.markAsChanged();
     }
 

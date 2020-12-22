@@ -63,6 +63,17 @@ body {
 .fg-window-out > .fg-sidebar {
     flex: initial;
 }
+
+/*
+ * Window container "fg-window-in" specific behavior. In order for containers
+ * to expand gracefully, all non container items inside are "initial" (shrink
+ * to fit contents), whereas all containers items are "auto" (expand to fill
+ * window). This is a sensible default that avoid text labels, buttons and such
+ * from being oversized, but will force all other containers to expand to bottom
+ * thus avoid status bars from floating when containers contents doesn't fill
+ * space itself.
+ */
+
 .fg-window-in {
     display: flex;
     flex-direction: column;
@@ -70,15 +81,21 @@ body {
 .fg-window-in > * {
     flex: initial;
 }
-.fg-statusbar {
-    flex: initial;
-}
-.fg-actionbar {
-    flex: initial;
-}
-.fg-notebook {
+.fg-window-in > .fg-notebook,
+.fg-window-in > .fg-hpane,
+.fg-window-in > .fg-vpane,
+.fg-window-in > .fg-text,
+.fg-window-in > .fg-hbox,
+.fg-window-in > .fg-vbox,
+.fg-window-in > .fg-flowbox,
+.fg-window-in > .fg-listbox,
+.fg-window-in > .fg-tableview {
     flex: auto;
 }
+
+/*
+ * Note book pages are expanded vertically.
+ */
 
 .fg-notebook {
     display: flex;
@@ -90,6 +107,10 @@ body {
 .fg-notebook > .fg-notebook-nav {
     flex: initial;
 }
+
+/*
+ * Where to put this?
+ */
 
 .fg-entry-text-multi {
     flex: auto;
@@ -138,13 +159,33 @@ body {
 }
 
 /*
- * Layout.
+ * Prefix "fg-c" tells the element is a container. All containers use the flex
+ * display no matter what's inside.
+ *
+ * Every container will have the "flex-direction" property explicitely set in
+ * this CSS file, there is no default behavior nor generic CSS class for this.
+ *
+ * On the opposite, a container can be configured on how to position flex items
+ * within if there's no "auto" (expand) cell: at start, center or end of itself
+ * which are respecitively the "fg-c-l", "fg-c-c" and "fg-c-r" CSS classes.
+ *
+ * On the opposite, widgets (container or not) stacked into a container will
+ * have the CellAlignment and CellSizing enums for telling to its container
+ * how to be sized ("auto", which means expand, or "initial" which means
+ * shrink) and how to align its content (left, center, right).
+ *
+ * Class "fg-w-e" is for the expand sizing, "fg-w-s" for the shrink sizing.
+ * Classes "fg-w-c", "fg-w-c" and "fg-w-r" are respectivily for positionning
+ * their content to left, center then right.
+ *
+ * In an ideal world, since Window will size itself to fill completely your
+ * viewport (viewport being the browser window), all containers should always
+ * expand vertically. For this, we need to add yet another layer of flex
+ * everywhere, this is not ideal but those cases are handled differently for
+ * each container (for example, tables cannot expand magically, so they are
+ * wrapped into additional divs).
  */
 
-.fg-c {
-    display: flex;
-    align-items: center;
-}
 .fg-c-l {
     justify-content: flex-start;
 }
@@ -155,10 +196,10 @@ body {
     justify-content: flex-end;
 }
 
-.fg-c > .fg-w-e {
+.fg-w-e {
     flex: auto;
 }
-.fg-c > .fg-w-s {
+.fg-w-s {
     flex: initial;
 }
 
@@ -172,12 +213,26 @@ body {
     text-align: right;
 }
 
-.fg-c-e {
-    /* flex: auto; */
+/*
+ * When a container contains only other containers, this class is NOT added,
+ * all containers have no padding per default (a few exceptions for flow box
+ * or boxes and panes).
+ *
+ * When they detect children not being containers, all containers except the
+ * exceptions listed above will add this class and add padding to themselves.
+ */
+.fg-p {
+    padding: 0.5rem 1rem;
 }
-.fg-c-s {
-    /* flex: initial; */
-    /* overflow: scroll; */
+
+/*
+ * All table cells (listbox and tableview) will disallow text-wrap per default
+ * but in order for this to gracefully display on slim screens, we will always
+ * wrap table-displayed into an extra container which will have an overflow-x
+ * set to scroll.
+ */
+table td, .fg-listbox-cell {
+    white-space: nowrap;
 }
 
 /*
@@ -186,7 +241,6 @@ body {
 
 .fg-sidebar {
     border-right: 1px solid #ccc;
-    padding: 0.5rem 1rem;
 }
 
 /*
@@ -196,15 +250,6 @@ body {
 .fg-entry-text, .fg-entry-text-multi {
     background: white;
     margin: 0.5rem 1rem;
-}
-
-/*
- * Page.
- */
-
-.fg-page {
-    border: 1px solid #ccc;
-    border-radius: 0.3rem;
 }
 
 /*
@@ -224,6 +269,11 @@ body {
 
 .fg-actionbar {
     padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+}
+.fg-actionbar > * {
+    flex: initial;
 }
 .fg-actionbar > *:not(:last-child) {
     margin-right: 1rem;
@@ -238,21 +288,17 @@ body {
 
 .fg-statusbar {
     padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+}
+.fg-statusbar > * {
+    flex: initial;
 }
 .fg-statusbar > *:not(:first-child) {
     margin-left: 1rem;
 }
 .fg-statusbar:not(:last-child) {
     border-bottom: 1px solid #ccc;
-}
-
-/*
- * Default page styling.
- */
-
-.fg-window > .fg-page {
-    padding: 0.5rem 1rem;
-    border: none;
 }
 
 /*
@@ -263,7 +309,7 @@ body {
     flex-wrap: wrap;
 }
 .fg-flowbox-item {
-    padding: 0.5rem;
+    margin: 0.5rem;
 }
 
 /*
@@ -278,7 +324,7 @@ body {
 .fg-listbox-row {
     display: table-row;
 }
-.fg-listbox-row-item {
+.fg-listbox-cell {
     display: table-cell;
     padding: 0.5rem 1rem;
 }
@@ -333,8 +379,10 @@ body {
 .fg-notebook-in {
     background: #fff;
 }
+.fg-notebook-page {
+    border: 1px solid #ccc;
+}
 .fg-notebook-item {
-    padding: 0.5rem 1rem;
     border: none;
 }
 .fg-notebook:not(:last-child) {
@@ -351,13 +399,12 @@ body {
     flex-direction: row;
 }
 .fg-vpane {
-	display: flex;
+    display: flex;
     padding: 0;
     flex-direction: column;
 }
 .fg-pane-pane {
     flex: auto;
-    padding: 0.5rem 1rem;
 }
 .fg-hpane > .fg-pane-pane:not(:first-child) {
     border-left: 1px solid #ccc;
@@ -383,7 +430,6 @@ body {
     margin: 0.5rem;
 }
 .fg-box {
-    padding: 0.5rem 1rem;
     border: 1px solid #ccc;
     border-radius: 0.3rem;
 }

@@ -1,4 +1,4 @@
-import { AbstractContainer, CellAlignment } from "./core";
+import { AbstractContainer, CellAlignment, CellSizing } from "./core";
 
 // @todo treeview
 
@@ -17,9 +17,9 @@ export class FlowBox extends AbstractContainer {
      * @inheritdoc
      */
     createElement() {
-        const element = this.createAlignedContainer("fg-flowbox");
+        const element = this.createContainer("fg-flowbox");
         for (const child of this.getChildren()) {
-            element.appendChild(this.createAlignedCell(child, "fg-flowbox-item"));
+            element.appendChild(this.createCell(child, "fg-flowbox-item"));
         }
         return element;
     }
@@ -44,10 +44,17 @@ export class ListBoxRow extends AbstractContainer {
     /**
      * @inheritdoc
      */
+    defaultChildSizing() {
+        return CellSizing.Expand;
+    }
+
+    /**
+     * @inheritdoc
+     */
     createElement() {
         const element = this.createContainer("fg-listbox-row");
         for (const child of this.getChildren()) {
-            element.appendChild(this.createCell(child, "fg-listbox-row-item"));
+            element.appendChild(this.createCell(child, "fg-listbox-cell"));
         }
         return element;
     }

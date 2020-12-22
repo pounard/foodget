@@ -1,5 +1,5 @@
 import { DataQuery, DataResponse, SortOrder, TableDataProvider } from "./data";
-import { AbstractContainer, CellAlignment, Signal } from "./core";
+import { AbstractContainer, CellAlignment, CellSizing, Signal } from "./core";
 
 /**
  * ListBox row.
@@ -10,6 +10,13 @@ export class TableViewRow extends AbstractContainer {
      */
     configure() {
         this.setCellAlignment(CellAlignment.Left);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    defaultChildSizing() {
+        return CellSizing.Expand;
     }
 
     /**
