@@ -1,4 +1,4 @@
-import { AbstractWidget } from "./core";
+import { AbstractWidget, Signal } from "./core";
 
 // @todo spinner
 // @todo level bar
@@ -34,9 +34,9 @@ export class Link extends AbstractWidget {
     /**
      * @inheritdoc
      */
-    constructor(label: string, href: string) {
+    constructor(label: string, href?: string) {
         super(label);
-        this.href = href;
+        this.href = href ?? '#';
     }
 
     /**
@@ -47,6 +47,7 @@ export class Link extends AbstractWidget {
         element.setAttribute("target", "blank");
         element.setAttribute("href", this.href);
         element.innerText = this.getLabel() as string;
+        element.addEventListener("click", () => this.dispatch(Signal.Clicked));
         return element;
     }
 }
