@@ -1,0 +1,177 @@
+.fg-app {
+    background: #e5e5e5;
+    color: #323232;
+}
+
+.fg-window-label {
+    background: #323232;
+    padding: 0.5rem 0.85rem;
+    text-align: center;
+}
+.fg-window-label, .fg-window-label * {
+    color: #ddd;
+}
+
+.fg-p {
+    padding: 0.5rem 0.85rem;
+}
+a.fg-link {
+    color: #6200ee;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.fg-statusbar a.fg-link {
+    color: #c68dff;
+}
+
+.fg-sidebar {
+    border-right: 1px solid #ccc;
+}
+.fg-entry-text, .fg-entry-text-multi {
+    background: white;
+    margin: 0.5rem 1rem;
+}
+
+.fg-button {
+    background: #6200ee;
+    color: white;
+    padding: 0.55rem 0.9rem;
+    border: none;
+    border-radius: 0.55rem;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.fg-actionbar {
+    padding: 0.5rem 0.85rem;
+    background: white;
+}
+.fg-actionbar:not(:last-child) {
+    border-bottom: 1px solid #ccc;
+}
+
+.fg-statusbar {
+    background: #323232;
+    padding: 0.5rem 0.85rem;
+    color: #ddd;
+}
+.fg-statusbar > *:not(:first-child) {
+    margin-left: 0.85rem;
+}
+.fg-statusbar:not(:last-child) {
+    border-bottom: 1px solid #ccc;
+}
+
+.fg-listbox {
+    display: table;
+    width: 100%;
+    background: white;
+}
+.fg-listbox-row {
+    display: table-row;
+}
+.fg-listbox-cell {
+    display: table-cell;
+    padding: 0.5rem 1rem;
+}
+.fg-listbox-row > .fg-w-s {
+    width: 1%;
+}
+
+/*
+ * TableView
+ */
+
+.fg-tableview th,
+.fg-tableview td {
+    border: none;
+    padding: 0.5rem 1rem;
+}
+.fg-tableview th:not(:lasft-child),
+.fg-tableview td:not(:lasft-child) {
+    border-bottom: 1px solid #ccc;
+}
+
+/*
+ * NoteBook.
+ */
+
+.fg-notebook-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid #ccc;
+}
+.fg-notebook-tab {
+    flex: initial;
+    margin: 0 0.5rem;
+    border-bottom: 3px solid transparent;
+}
+.fg-notebook-tab a {
+    padding: 0.5rem;
+    display: block;
+}
+.fg-notebook-tab.active {
+    border-bottom: 3px solid #3584e4;
+}
+.fg-notebook-in {
+    background: #fff;
+}
+.fg-notebook-page {
+    border: 1px solid #ccc;
+}
+.fg-notebook-item {
+    border: none;
+}
+.fg-notebook:not(:last-child) {
+    border-bottom: 1px solid #ccc;
+}
+
+/*
+ * HorizontalPane, VerticalPane.
+ */
+
+.fg-hpane {
+    display: flex;
+    padding: 0;
+    flex-direction: row;
+}
+.fg-vpane {
+    display: flex;
+    padding: 0;
+    flex-direction: column;
+}
+.fg-pane-pane {
+    flex: auto;
+}
+.fg-hpane > .fg-pane-pane:not(:first-child) {
+    border-left: 1px solid #ccc;
+}
+.fg-vpane > .fg-pane-pane:not(:first-child) {
+    border-top: 1px solid #ccc;
+}
+
+/*
+ * HorizontalBoxes, VerticalBoxes.
+ */
+
+.fg-hbox {
+    padding: 0.5rem 1rem;
+    flex-direction: row;
+}
+.fg-vbox {
+    padding: 0.5rem 1rem;
+    flex-direction: column;
+}
+.fg-hbox-item {
+    margin-top: 0.5rem;
+    margin: 0.5rem;
+}
+.fg-box {
+    border: 1px solid #ccc;
+    border-radius: 0.3rem;
+}
