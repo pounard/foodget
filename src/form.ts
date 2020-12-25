@@ -1,5 +1,5 @@
 import { AbstractWidget, Signal } from "./core";
-import { Image } from "./display";
+import { Icon, IconName, IconSize, Image } from "./display";
 
 // @todo Switch button (button with state)
 // @todo radios buttons (radios)
@@ -147,11 +147,58 @@ export class CheckBox extends AbstractWidget {
  */
 export class Button extends AbstractWidget {
     /**
+     * Icon if any.
+     */
+    private icon: Icon | null = null;
+
+    /**
+     * @inheritdoc
+     */
+    constructor(label: string, iconName?: IconName, iconSize?: IconSize) {
+        super(label);
+        this.setIcon(iconName, iconSize);
+    }
+
+    /**
+     * Set icon.
+     */
+    setIcon(iconName?: IconName, iconSize?: IconSize) {
+        this.icon?.dispose();
+        if (iconName) {
+            this.icon = new Icon(iconName, iconSize);
+        } else {
+            this.icon = null;
+        }
+    }
+
+    /**
+     * Get icon.
+     */
+    getIcon(): Icon | null {
+        return this.icon;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    getNestedWidgets() {
+        return this.icon ? [this.icon] : null;
+    }
+
+    /**
      * @inheritdoc
      */
     createElement() {
         const element = this.doCreateElement("button", "fg-button");
-        element.innerText = this.getLabel() ?? '';
+        if (this.icon) {
+            element.appendChild(this.icon.getElement());
+        }
+        const label = this.getLabel();
+        if (label) {
+            const textElement = this.doCreateElement("span");
+            textElement.innerText = label;
+            element.appendChild(textElement);
+        }
         element.addEventListener("click", () => this.dispatch(Signal.Clicked));
         return element;
     }
@@ -161,14 +208,31 @@ export class Button extends AbstractWidget {
  * Simple button with image.
  */
 export class ImageButton extends AbstractWidget {
+    /**
+     * Image if any.
+     */
     private image: Image | null = null;
 
-    setImage(image: Image): void {
-        this.image = image;
+    /**
+     * Set image.
+     */
+    setImage(image?: Image): void {
+        this.image?.dispose();
+        this.image = image ?? null;
     }
 
+    /**
+     * Get image.
+     */
     getImage(): Image | null {
         return this.image;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    getNestedWidgets() {
+        return this.image ? [this.image] : null;
     }
 
     /**
@@ -181,7 +245,9 @@ export class ImageButton extends AbstractWidget {
         }
         const label = this.getLabel();
         if (label) {
-            element.appendChild(document.createTextNode(label));
+            const textElement = this.doCreateElement("span");
+            textElement.innerText = label;
+            element.appendChild(textElement);
         }
         element.addEventListener("click", () => this.dispatch(Signal.Clicked));
         return element;

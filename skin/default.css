@@ -236,6 +236,14 @@ table td, .fg-listbox-cell {
 }
 
 /*
+ * Icons.
+ */
+
+.fg-icon {
+    vertical-align: middle;
+}
+
+/*
  * SideBar
  */
 
@@ -253,14 +261,51 @@ table td, .fg-listbox-cell {
 }
 
 /*
+ * Links
+ */
+
+a.fg-link {
+    color: #6200ee;
+    text-decoration: underline;
+}
+
+/*
  * Buttons
  */
 
 .fg-button {
+    border-radius: 0.55rem;
     padding: 0.5rem 1rem;
     border: 1px solid #ccc;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+.fg-button > * {
+    flex: initial;
+}
+.fg-button > *:not(:first-child) {
+    padding-left: 0.25rem;
+    /* Sad behaviour, some font have unused space atop letters. */
+    margin-top: -1px;
+}
+.fg-button > span {
     border-radius: 0.3rem;
     white-space: nowrap;
+}
+
+/**
+ * Fix sizes and margins when using text in conjunction with icons.
+ * Fonts we use when uppercased have a few-pixels wide top padding due
+ * to glyph size in font.
+ * Moreover, most icons have also whitespace around them, we need to
+ * decal them a few pixels to the left as well.
+ */
+.fg-button > .fg-icon {
+    margin-left: -2px;
+}
+.fg-button > span {
+    margin-top: -1px;
 }
 
 /*

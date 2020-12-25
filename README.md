@@ -167,6 +167,13 @@ will function properly but theming and display might be broken in such cases.
  - [x] for repaint to be implicit on change,
  - [x] do not call getElement() or repaint() when child is not showed,
  - [x] initializer() and refresh() on all containers,
+ - [x] Icon basics
+ - [ ] Icon add ActionIcon enum,
+ - [ ] Icon add AlertIcon enum,
+ - [ ] Add optional Icon on Link,
+ - [ ] Icon position first or last on Button and Link
+ - [ ] Popover widget,
+ - [ ] App window switcher widget (using Popover),
  - [x] SideBar basics,
  - [ ] SideBar based ContainerStack,
  - [ ] SideBar responsive display and buttons,
@@ -183,6 +190,6 @@ will function properly but theming and display might be broken in such cases.
  - [ ] implement a better repaint() based on changed object graph,
  - [ ] unit test it (single thing I think I can't do in (Type|Java)Script,
  - [ ] investigate chaining method calls on widgets to avoid temp vars,
- - [ ] make theming easier,
- - [ ] provide a few more themes,
+ - [x] make theming easier (not really eaiser, but an example is fine),
+ - [x] material theme example,
  - [ ] decouple rendering (why couldn't it be WebGL or canvas?).

@@ -453,6 +453,17 @@ export abstract class AbstractWidget implements Widget {
     protected configure(): void {};
 
     /**
+     * Get associated widget, not children but components of this widget.
+     *
+     * It is imperative to implement if you use other components to build
+     * a more complex widget, so that refresh(), repaint() and dispose()
+     * will handle those correctly.
+     */
+    protected getNestedWidgets(): Widget[] | null {
+        return null;
+    };
+
+    /**
      * @inheritdoc
      */
     connect(signal: Signal, handler: Handler<this>) {
@@ -618,6 +629,7 @@ export abstract class AbstractWidget implements Widget {
      */
     dispose() {
         this.changed = false;
+        this.getNestedWidgets()?.forEach(widget => widget.dispose());
         if (this.element) {
             this.element.remove();
         }
@@ -648,6 +660,8 @@ export abstract class AbstractWidget implements Widget {
      */
     repaint() {
         if (this.changed) {
+            // Repaint all nested widgets.
+            this.getNestedWidgets()?.forEach(widget => widget.repaint());
             // Backup previous element first, then remove its reference from
             // the current instance to force repaint. Previous elmeent will
             // be really replaced in DOM only once the new element will be
